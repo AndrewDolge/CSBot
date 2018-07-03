@@ -27,6 +27,9 @@ public class CSBot extends ListenerAdapter{
      */
     @Override 
     public void onMessageReceived(MessageReceivedEvent event){
+
+        event.getMessage().getContent
+
     }//onMessageReceived
 
 
