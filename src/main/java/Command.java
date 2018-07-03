@@ -1,3 +1,5 @@
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 /**
@@ -8,16 +10,16 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  * @author Andrew Dolge
  * 
  */
-public abstract class Command{
+public abstract class Command implements Comparable<Command>{
 
     private String  trigger;
     private int     cooldown;
-    private boolean onCooldown;
+    private AtomicBoolean onCooldown;
 
     /**
      * High level Constructor for the Command Class
      * 
-     * @param trigger the text string that identifies this command
+     * @param trigger the text string that identifies this command.
      * @param cooldown the amount of time, in seconds, that this command remains on cooldown after it is used.
      */
     private Command(String trigger, int cooldown){
@@ -28,8 +30,50 @@ public abstract class Command{
 
         this.trigger = trigger;
         this.cooldown = cooldown;
+        this.onCooldown = new AtomicBoolean(false);
 
     }//constructor
+
+    /**
+     * Getter method for the trigger string.
+     * 
+     * @return the trigger of this command.
+     */
+    public String getTrigger(){
+        return this.trigger;
+
+    }//getTrigger
+
+    /**
+     * Getter method for the cooldown time of this command.
+     * 
+     * @return the time, in seconds, that this second stays on cooldown.
+     */
+    public int getCooldown(){
+        return this.cooldown;
+
+    }//getCooldown
+
+    /**
+     * Checks to see if this command is on Cooldown.
+     * 
+     * @return true, if this command is on cooldown. False otherwise.
+     */
+    public boolean isOnCooldown(){
+        return this.onCooldown.get();
+
+    }//isOnCooldown
+
+    @Override
+    /**
+     * Compares two Commands by their triggers. 
+     * 
+     * @returns 0 if the triggers are the same, a negative number if this command's trigger is lexographically less than the other commands, and positive otherwise.
+     */
+    public int compareTo(Command other){
+
+        return this.getTrigger().compareTo(other.getTrigger());
+    }//compareTo
 
     /**
      * Retrieves the Help String for this command.
@@ -52,6 +96,13 @@ public abstract class Command{
      */
     public abstract void  process(MessageReceivedEvent event);
 
+    /**
+     * returns a brief description of this command.
+     * This string should be less than 20 characters, and give the user a basic idea of what the command does.
+     * 
+     * @return a brief description of this command.
+     */
+    public abstract String getDescription();
 
 
 }//class

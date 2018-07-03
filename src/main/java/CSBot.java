@@ -20,6 +20,16 @@ public class CSBot extends ListenerAdapter{
     private ArrayList<Command> commandList;
 
 
+    private CSBot(){
+        
+        commandList = new ArrayList<Command>();
+
+
+
+
+    }//CSBot
+
+
     /**
      * called whenever a discord messsage appears in chat.
      * checks the event for a command, and calls the Message Processor to handle the message.
@@ -27,8 +37,6 @@ public class CSBot extends ListenerAdapter{
      */
     @Override 
     public void onMessageReceived(MessageReceivedEvent event){
-
-        event.getMessage().getContent
 
     }//onMessageReceived
 
