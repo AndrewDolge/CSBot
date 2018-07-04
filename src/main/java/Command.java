@@ -22,7 +22,7 @@ public abstract class Command implements Comparable<Command>{
      * @param trigger the text string that identifies this command.
      * @param cooldown the amount of time, in seconds, that this command remains on cooldown after it is used.
      */
-    private Command(String trigger, int cooldown){
+    public Command(String trigger, int cooldown){
 
         if(trigger == null) {throw new IllegalArgumentException("Command.constructor: trigger is null");}
         if(trigger == ""  ) {throw new IllegalArgumentException("Command.constructor: trigger is empty");}
@@ -96,7 +96,7 @@ public abstract class Command implements Comparable<Command>{
      * @param event the incoming event that contains the message
      * 
      */
-    public abstract void  process(MessageReceivedEvent event);
+    public abstract void process(MessageReceivedEvent event);
 
     /**
      * Retrieves the Help String for this command.
