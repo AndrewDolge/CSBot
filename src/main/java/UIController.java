@@ -24,6 +24,7 @@ private void onStartButtonClicked(ActionEvent event){
    
     
     CSBot csBot = CSBot.getInstance();
+    csBot.addStandardCommands();
 
     if(!csBot.isRunning()){
         textArea.appendText("starting bot...\n");

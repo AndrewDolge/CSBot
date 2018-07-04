@@ -15,6 +15,7 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
  */
 public class CSBot extends ListenerAdapter{
 
+    private static final boolean DEBUG = true;
     private JDA                csJDA;
     private ExecutorService    commandExecutor;
     private ArrayList<Command> commandList;
@@ -103,6 +104,7 @@ public class CSBot extends ListenerAdapter{
         
         csJDA.shutdown();
         commandExecutor.shutdown();
+        commandList.clear();
         
         setRunning(false);
     }//shutdown
@@ -126,10 +128,27 @@ public class CSBot extends ListenerAdapter{
                 return false;
             }
         }
+
+            this.commandList.add(toAdd);
             //TODO: log command add success
             return true;
 
-    }//addCommand
+    }//addCommand  
+
+    /**
+     * adds a set of standard commands to the bot.
+     * 
+     * you should place addCommands here!
+     * 
+     * 
+     */
+    public void addStandardCommands(){
+
+        this.addCommand(new PingCommand("ping", 3));
+
+
+    }//addStandardCommands
+
 
     /**
      * gets the help string from a command with the given commandTrigger
@@ -169,9 +188,12 @@ public class CSBot extends ListenerAdapter{
     @Override 
     public void onMessageReceived(MessageReceivedEvent event){
 
-        event.getTextChannel().sendMessage("text").queue();
         String message = event.getMessage().getContentRaw();
         //check to see if the message starts with the prefix
+
+        if(DEBUG){System.out.println("starts with prefix: " + message.startsWith(prefix));}
+        if(DEBUG){System.out.println("length: " + Boolean.valueOf(message.split(" ")[0].length() > 1));}
+
         if(message.startsWith(prefix) && message.split(" ")[0].length() > 1 ){
 
             //find the appropriate command
@@ -212,22 +234,28 @@ public class CSBot extends ListenerAdapter{
      * 
      */
     private Command findCommand(String commandTrigger){
+        Command result = null;
 
+        if(DEBUG){System.out.println("command to find:" + commandTrigger );}
         try{
-
+            if(DEBUG){System.out.println("command list size: " + this.commandList.size() );}
             for(Command command: this.commandList){
                 //compares each command's trigger to 
+                if(DEBUG){System.out.println("command in list:" + command.getTrigger() );}
+
                 if(command.getTrigger().equals(commandTrigger)) {
-                    return command;
+                    if(DEBUG){System.out.println("found match: " + command.getTrigger() +":"+ commandTrigger);}
+                   result = command;
                 }
 
             }
         
         }catch(Exception e){
-            return null;
+         e.printStackTrace();
         }
        
-        return null;
+        if(DEBUG){System.out.println("command to return: " + result);}
+        return result;
     }//findCommand
 
 
