@@ -12,8 +12,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public abstract class Command implements Comparable<Command>{
 
-    private String  trigger;
-    private int     cooldown;
+    private String        trigger;
+    private int           cooldown;
     private AtomicBoolean onCooldown;
 
     /**
