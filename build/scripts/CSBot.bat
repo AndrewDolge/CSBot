@@ -66,7 +66,7 @@ set CMD_LINE_ARGS=%*
 set CLASSPATH=%APP_HOME%\lib\CSBot.jar;%APP_HOME%\lib\JDA-3.6.0_376.jar;%APP_HOME%\lib\guava-23.0.jar;%APP_HOME%\lib\jsr305-3.0.2.jar;%APP_HOME%\lib\slf4j-api-1.7.25.jar;%APP_HOME%\lib\commons-collections4-4.1.jar;%APP_HOME%\lib\json-20160810.jar;%APP_HOME%\lib\trove4j-3.0.3.jar;%APP_HOME%\lib\opus-java-1.0.2.jar;%APP_HOME%\lib\nv-websocket-client-2.2.jar;%APP_HOME%\lib\okhttp-3.8.1.jar;%APP_HOME%\lib\error_prone_annotations-2.0.18.jar;%APP_HOME%\lib\j2objc-annotations-1.1.jar;%APP_HOME%\lib\animal-sniffer-annotations-1.14.jar;%APP_HOME%\lib\opus-java-api-1.0.2.jar;%APP_HOME%\lib\opus-java-natives-1.0.2.jar;%APP_HOME%\lib\okio-1.13.0.jar;%APP_HOME%\lib\jna-4.4.0.jar
 
 @rem Execute CSBot
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %CS_BOT_OPTS%  -classpath "%CLASSPATH%" App %CMD_LINE_ARGS%
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %CS_BOT_OPTS%  -classpath "%CLASSPATH%" UI %CMD_LINE_ARGS%
 
 :end
 @rem End local scope for the variables with windows NT shell

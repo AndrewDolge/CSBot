@@ -63,6 +63,15 @@ public abstract class Command implements Comparable<Command>{
         return this.onCooldown.get();
 
     }//isOnCooldown
+    
+    /**
+     * Sets whether this command is on Command
+     * 
+     * @param value the cooldown status
+     */
+    public void setOnCooldown(boolean value) {
+       onCooldown.set(value);
+    }
 
     @Override
     /**
@@ -75,6 +84,20 @@ public abstract class Command implements Comparable<Command>{
         return this.getTrigger().compareTo(other.getTrigger());
     }//compareTo
 
+
+    /**
+     * Processes the current given Event.
+     * The text of the message can be found by calling getMessage().getContentRaw().
+     * 
+     * This method is also responsible for responding to the user by queueing a message in the
+     * channel this message was received in.
+     * This can be accomplished 
+     * 
+     * @param event the incoming event that contains the message
+     * 
+     */
+    public abstract void  process(MessageReceivedEvent event);
+
     /**
      * Retrieves the Help String for this command.
      * The Help string should include detailed instructions on how to use this command,
@@ -83,18 +106,6 @@ public abstract class Command implements Comparable<Command>{
      * @return The Help String of this command.
      */
     public abstract String getHelpString();
-
-    /**
-     * Processes the current given Event.
-     * The text of the message can be found by calling getMessage().getContentRaw().
-     * 
-     * This method is also responsible for responding to the user by queueing a message in the
-     * channel this message was received in.
-     * 
-     * @param event the incoming event that contains the message
-     * 
-     */
-    public abstract void  process(MessageReceivedEvent event);
 
     /**
      * returns a brief description of this command.

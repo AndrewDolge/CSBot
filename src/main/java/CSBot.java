@@ -26,7 +26,6 @@ public class CSBot extends ListenerAdapter{
     private CSBot(){
         
         commandList     = new ArrayList<Command>();
-        commandExecutor = Executors.newCachedThreadPool(); 
         running         = false;
         prefix          = "!";
 
@@ -79,6 +78,8 @@ public class CSBot extends ListenerAdapter{
     public boolean start(String token ){
     
         try{
+            commandExecutor = Executors.newCachedThreadPool(); 
+
             csJDA = new JDABuilder(AccountType.BOT)
             .setToken(token)
             .addEventListener(this)
@@ -88,6 +89,7 @@ public class CSBot extends ListenerAdapter{
             e.printStackTrace();
             return false;
         }
+
         setRunning(true);
         return true;
 
@@ -166,6 +168,8 @@ public class CSBot extends ListenerAdapter{
      */
     @Override 
     public void onMessageReceived(MessageReceivedEvent event){
+
+        event.getTextChannel().sendMessage("text").queue();
         String message = event.getMessage().getContentRaw();
         //check to see if the message starts with the prefix
         if(message.startsWith(prefix) && message.split(" ")[0].length() > 1 ){

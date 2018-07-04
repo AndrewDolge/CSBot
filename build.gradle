@@ -7,6 +7,8 @@
  */
 
 plugins {
+
+
     // Apply the java plugin to add support for Java
     id 'java'
 
@@ -14,8 +16,7 @@ plugins {
     id 'application'
 }
 
-// Define the main class for the application
-mainClassName = 'App'
+
 
 dependencies {
  
@@ -34,3 +35,16 @@ repositories {
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
 }
+
+// Define the main class for the application
+mainClassName = 'UI'
+
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName,
+                   'Class-Path': configurations.runtime.files.collect {"$it.name"}.join(' ')
+    }
+}
+
+
