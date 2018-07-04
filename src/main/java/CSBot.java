@@ -12,26 +12,34 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
  * Main class of CSBot
  * maintains the core functionality of the bot.
  * 
- * 
  */
-
 public class CSBot extends ListenerAdapter{
 
     private JDA                csJDA;
     private ExecutorService    commandExecutor;
     private ArrayList<Command> commandList;
     private boolean            running;
-    
+    private String             prefix;
 
-    //TODO: make a File to parse string to text to get token
-    //TODO: make this class singular
+    private static final CSBot instance = new CSBot();
+    
     private CSBot(){
         
-        commandList = new ArrayList<Command>();
+        commandList     = new ArrayList<Command>();
         commandExecutor = Executors.newCachedThreadPool(); 
-
+        running         = false;
+        prefix          = "!";
 
     }//CSBot
+
+    /**
+     * Singleton pattern method for CSBot.
+     * 
+     * 
+     */
+    public static CSBot getInstance(){
+        return instance;
+    }//getInstance
 
     /**
      * setter method for the running field
@@ -45,6 +53,20 @@ public class CSBot extends ListenerAdapter{
      */
     public boolean isRunning(){
         return this.running;
+    }//isRunning
+
+    /**
+     * setter method for the prefix.
+     */
+    public void setPrefix(String prefix){
+        this.prefix = prefix;
+    }//setRunning
+
+    /**
+     * getter method for the prefix.
+     */
+    public String getPrefix(){
+        return this.prefix;
     }//isRunning
 
     /**
@@ -84,6 +106,58 @@ public class CSBot extends ListenerAdapter{
     }//shutdown
 
     /**
+     * Adds the command to the bot.
+     * Each command must have a unique trigger.
+     * If a command has the same trigger as a command that is already added, it will not be added.
+     * 
+     * @param command the command to be added
+     * @return true, if the command was added, false otherwise
+     * 
+     */
+    public boolean addCommand(Command toAdd){
+
+        //compare this command to all other commands, checking to see if there is a trigger conflict
+        for(Command command: this.commandList){
+
+            if(command.compareTo(toAdd) == 0){
+                //TODO: Log command add failure
+                return false;
+            }
+        }
+            //TODO: log command add success
+            return true;
+
+    }//addCommand
+
+    /**
+     * gets the help string from a command with the given commandTrigger
+     * 
+     * @param commandTrigger a string containing the desired command's trigger.
+     * @return the help string for the desired command
+     * 
+     */
+    protected String getHelp(String commandTrigger){
+        
+        return this.findCommand(commandTrigger).getHelpString();
+    }//getDescription
+
+    /**
+     * returns a string containing a list of all this bot's command descriptions.
+     * 
+     * @return a string containing all of this bot's command descriptions.
+     */
+    protected String getDescriptionList(){
+
+        StringBuilder sb = new StringBuilder();
+
+        for(Command command: commandList){
+            sb.append(command.getTrigger() + ": " + command.getDescription() + "\n");
+        }
+
+        return sb.toString();
+    }//getList
+
+    /**
      * called whenever a discord messsage appears in chat.
      * checks the event for a command, and calls the Message Processor to handle the message.
      * 
@@ -92,47 +166,54 @@ public class CSBot extends ListenerAdapter{
      */
     @Override 
     public void onMessageReceived(MessageReceivedEvent event){
+        String message = event.getMessage().getContentRaw();
+        //check to see if the message starts with the prefix
+        if(message.startsWith(prefix) && message.split(" ")[0].length() > 1 ){
 
-        Command toExecute = findCommand(event.getMessage().getContentRaw());
-        if(isRunning() && toExecute != null){
-            commandExecutor.execute(
-                //create a new Runnable implementation. Runs on it's own thread.
-                new Runnable(){
-                    //method called when the Runnable is executed.
-                    public void run(){
-                        
-                        try{
-                            //execute the command
-                            toExecute.process(event);
-                        
-                        }catch(Exception e){
-                            e.printStackTrace();
-                            //TODO: Log command exceptions
-                        }//catch
-                    }//run
-                }//Runnable
-            );//execute
+            //find the appropriate command
+            Command toExecute = findCommand(message.split(" ")[0].substring(1));
 
+            if(isRunning() && toExecute != null){
+                commandExecutor.execute(
+                    //create a new Runnable implementation. Runs on it's own thread.
+                    new Runnable(){
+                        //method called when the Runnable is executed.
+                        public void run(){
+                            
+                            try{
+                                //execute the command
+                                toExecute.process(event);
+                            
+                            }catch(Exception e){
+                                e.printStackTrace();
+                                //TODO: Log command exceptions
+                            }//catch
+                        }//run
+                    }//Runnable
+                );//execute
+    
+            }else{
+             //TODO: Log failed command
+            }//ifRunning
 
-        }else{
-         //TODO: Log failed command
-        }//ifRunning
+        }//if prefix
+
     }//onMessageReceived
 
     /**
-     * gets the appropriate command whose trigger exists in the given message.
+     * gets the appropriate command that matches the given command trigger
      * 
-     * @param message the message from the discord channel
+     * @param commandTrigger the trigger of the desired command
      * @return the Command whose trigger exists within the message, null otherwise
      * 
      */
-    private Command findCommand(String message){
+    private Command findCommand(String commandTrigger){
 
         try{
-            String[] split = message.split(" ");
 
             for(Command command: this.commandList){
-                if(command.getTrigger().compareTo(split[0]) == 0) {
+                //compares each command's trigger to 
+                if(command.getTrigger().equals(commandTrigger)) {
                     return command;
                 }
 
