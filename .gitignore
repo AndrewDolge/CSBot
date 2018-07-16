@@ -1,0 +1,16 @@
+bin/main/SQLiteConnection.class
+bin/main/FoodTracker.class
+bin/main/FoodTrackCommand.class
+bin/main/Token.class
+build/classes/java/main/Token.class
+build/classes/java/main/UIController.class
+src/main/java/SQLiteConnection.java
+src/main/java/Token.java
+src/main/java/FoodTracker.txt
+src/main/java/FoodTracker.java
+src/main/java/FoodTrackCommand.java
+build/classes/java/main/SQLiteConnection.class
+build/classes/java/main/FoodTracker.class
+build/classes/java/main/FoodTrackCommand.class
+build/classes/java/main/UIController.class
+build/classes/java/main/Token.class

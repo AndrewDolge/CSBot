@@ -144,11 +144,14 @@ public class CSBot extends ListenerAdapter{
      */
     public void addStandardCommands(){
 
-        this.addCommand(new PingCommand("ping", 3));
-
+        this.addCommand(new HelpCommand("help", 1));
+        this.addCommand(new ListCommand("list", 1));
+        this.addCommand(new PingCommand("ping", 1));
+        this.addCommand(new RollCommand("roll", 1));
+        this.addCommand(new FoodTrackCommand(5));
+    
 
     }//addStandardCommands
-
 
     /**
      * gets the help string from a command with the given commandTrigger
@@ -208,7 +211,11 @@ public class CSBot extends ListenerAdapter{
                             
                             try{
                                 //execute the command
-                                toExecute.process(event);
+                                if(!toExecute.isOnCooldown()){
+                                    toExecute.process(event);
+                                    toExecute.startCooldown();
+                                }
+                                
                             
                             }catch(Exception e){
                                 e.printStackTrace();
@@ -233,7 +240,7 @@ public class CSBot extends ListenerAdapter{
      * @return the Command whose trigger exists within the message, null otherwise
      * 
      */
-    private Command findCommand(String commandTrigger){
+    public Command findCommand(String commandTrigger){
         Command result = null;
 
         if(DEBUG){System.out.println("command to find:" + commandTrigger );}

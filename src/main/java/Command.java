@@ -86,6 +86,59 @@ public abstract class Command implements Comparable<Command>{
 
 
     /**
+     * sends a message to the channel that this message was received.
+     * 
+     * @param event   the event object received.
+     * @param message the message to return to the user.
+     * 
+     */
+    public static void sendMessageToChannel(MessageReceivedEvent event, String message){
+        try{
+        event.getChannel().sendMessage(message).queue();
+        }catch(Exception e){
+            e.printStackTrace();
+            //TODO: log exception.
+        }
+    }//sendMessageToChannel
+
+    /**
+     * sends a message to the channel that this message was received, with an @user notification
+     * 
+     * @param event   the event object received.
+     * @param message the message to return to the user.
+     * 
+     */
+    public static void sendMessageWithMention(MessageReceivedEvent event, String message){
+        sendMessageToChannel(event, event.getAuthor().getAsMention() + "\n"+message);
+    }//sendMessageToChannel
+
+    /**
+     * modifies the given string to use CSS style onto a message string
+     * 
+     * @param toFormat the string to format
+     * @returns the formatted string
+     */
+    public static String formatText(String toFormat){
+        return "```\n" + toFormat + "\n```";
+    }//formatText
+
+    /**
+     * places this command on cooldown.
+     * sleeps the current thread that this command runs on.
+     * 
+     */
+    public void startCooldown(){
+        setOnCooldown(true);
+        try{
+            Thread.sleep(cooldown * 1000);
+        }catch(InterruptedException ie){
+            
+        }
+
+        setOnCooldown(false);
+    }//startCoolDown
+
+    /**
      * Processes the current given Event.
      * The text of the message can be found by calling getMessage().getContentRaw().
      * 
