@@ -13,19 +13,17 @@ plugins {
     id 'java'
 
     // Apply the application plugin to add support for building an application
-    id 'application'
+    id 'java-library'
 }
 
 
 
 dependencies {
  
-    compile 'net.dv8tion:JDA:3.6.0_376'
-
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.23.1'
+    api 'net.dv8tion:JDA:3.6.0_376'
 
     // This dependency is found on compile classpath of this component and consumers.
-    compile 'com.google.guava:guava:23.0'
+    implementation 'com.google.guava:guava:23.0'
 
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'
@@ -38,18 +36,6 @@ repositories {
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
 
-   Maven
-}
-
-// Define the main class for the application
-mainClassName = 'UI'
-
-
-jar {
-    manifest {
-        attributes 'Main-Class': mainClassName,
-                   'Class-Path': configurations.runtime.files.collect {"$it.name"}.join(' ')
-    }
 }
 
 
