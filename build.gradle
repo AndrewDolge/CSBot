@@ -13,17 +13,20 @@ plugins {
     id 'java'
 
     // Apply the application plugin to add support for building an application
-    id 'java-library'
+    id 'application'
 }
 
 
 
 dependencies {
  
-    api 'net.dv8tion:JDA:3.6.0_376'
+    compile 'net.dv8tion:JDA:3.6.0_376'
+
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.+'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.+'
 
     // This dependency is found on compile classpath of this component and consumers.
-    implementation 'com.google.guava:guava:23.0'
+    compile'com.google.guava:guava:23.0'
 
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'
@@ -37,5 +40,7 @@ repositories {
     jcenter()
 
 }
+
+mainClassName = "csbot.ui.UI"
 
 
