@@ -1,8 +1,5 @@
 package csbot.core;
 
-import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -140,8 +137,8 @@ public class CSBot extends ListenerAdapter{
      */
     public void shutdown(){
         
-        csJDA.shutdown();
-        commandExecutor.shutdown();
+        csJDA.shutdownNow();
+        commandExecutor.shutdownNow();
         commandList.clear();
         
         setRunning(false);
@@ -220,9 +217,9 @@ public class CSBot extends ListenerAdapter{
 
             //find the appropriate command
             Command toExecute = findCommand(message.split(" ")[0].substring(1));
-            logger.debug("CSBot.onMessageReceived: Executing Command "+ toExecute.getTrigger());
 
             if(isRunning() && toExecute != null){
+                logger.debug("CSBot.onMessageReceived: Executing Command "+ toExecute.getTrigger() + " for user: " + event.getAuthor().getName());
                 commandExecutor.execute(
                     //create a new Runnable implementation. Runs on it's own thread.
                     new Runnable(){
@@ -248,7 +245,7 @@ public class CSBot extends ListenerAdapter{
     
             }else{
           
-             logger.error("CSBot.onMessageReceived: No Command found!");
+             logger.error("CSBot.onMessageReceived: No Command found for message: " + message.split(" ")[0].substring(1) );
             }//ifRunning
 
         }//if prefix
