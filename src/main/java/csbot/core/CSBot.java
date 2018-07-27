@@ -1,8 +1,5 @@
 package csbot.core;
 
-import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,6 +10,7 @@ import org.slf4j.Logger;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
@@ -220,34 +218,45 @@ public class CSBot extends ListenerAdapter{
 
             //find the appropriate command
             Command toExecute = findCommand(message.split(" ")[0].substring(1));
-            logger.debug("CSBot.onMessageReceived: Executing Command "+ toExecute.getTrigger());
+            logger.debug("CSBot.onMessageReceived: Executing Command "+ toExecute.getTrigger() + "by user: " + event.getAuthor().getName());
 
+            //If the bot is running and the command is not null
             if(isRunning() && toExecute != null){
-                commandExecutor.execute(
-                    //create a new Runnable implementation. Runs on it's own thread.
-                    new Runnable(){
-                        //method called when the Runnable is executed.
-                        public void run(){
-                            
-                            try{
-                                //execute the command
-                                if(!toExecute.isOnCooldown()){
-                                    toExecute.process(event);
-                                    toExecute.startCooldown();
-                                }
+
+                //if the command requires admin permissions, and the user has them
+                boolean hasAdminPermissions = toExecute.isAdminOnly() || toExecute.isAdminOnly() && event.getMember().getPermissions().contains(Permission.ADMINISTRATOR);
+                if( !toExecute.isAdminOnly() || hasAdminPermissions){
+
+                    //execute the command in a new thread.
+                    commandExecutor.execute(
+                        //create a new Runnable implementation. Runs on it's own thread.
+                        new Runnable(){
+                            //method called when the Runnable is executed.
+                            public void run(){
                                 
-                            
-                            }catch(Exception e){
-                                e.printStackTrace();
-                                logger.error("CSBot.onMessageReceived: Command " + toExecute.getTrigger() + " threw exception", e);
+                                try{
+                                    //execute the command
+                                    if(!toExecute.isOnCooldown()){
+                                        toExecute.process(event);
+                                        toExecute.startCooldown();
+                                    }
+                                    
                                 
-                            }//catch
-                        }//run
-                    }//Runnable
-                );//execute
-    
+                                }catch(Exception e){
+                                    e.printStackTrace();
+                                    logger.error("CSBot.onMessageReceived: Command " + toExecute.getTrigger() + " threw exception", e);
+                                    
+                                }//catch
+                            }//run
+                        }//Runnable
+                    );//execute
+
+                }else{
+                    //log admin permission access
+                    logger.error("CSBot.onMessageReceived: Admin permissions required.");
+                }
             }else{
-          
+             //log command not found
              logger.error("CSBot.onMessageReceived: No Command found!");
             }//ifRunning
 

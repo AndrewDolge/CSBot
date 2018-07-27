@@ -20,6 +20,7 @@ public abstract class Command implements Comparable<Command>{
     private String        trigger;
     private int           cooldown;
     private AtomicBoolean onCooldown;
+    private boolean       isAdminOnly;
 
     private static Logger logger = LoggerFactory.getLogger("Command");
 
@@ -29,17 +30,32 @@ public abstract class Command implements Comparable<Command>{
      * @param trigger the text string that identifies this command.
      * @param cooldown the amount of time, in seconds, that this command remains on cooldown after it is used.
      */
-    public Command(String trigger, int cooldown){
+    public Command(String trigger, int cooldown, boolean isAdminOnly){
 
         if(trigger == null) {throw new IllegalArgumentException("Command.constructor: trigger is null");}
         if(trigger == ""  ) {throw new IllegalArgumentException("Command.constructor: trigger is empty");}
         if(cooldown < 0   ) {throw new IllegalArgumentException("Command.constructor: cooldown is negative");}
 
-        this.trigger = trigger;
-        this.cooldown = cooldown;
-        this.onCooldown = new AtomicBoolean(false);
+        this.trigger     = trigger;
+        this.cooldown    = cooldown;
+        this.onCooldown  = new AtomicBoolean(false);
+        this.isAdminOnly = isAdminOnly;
 
     }//constructor
+
+    public Command(String trigger, int cooldown){
+        this(trigger, cooldown,false);
+    }
+
+    /**
+     * 
+     * getter method for isAdminOnly status of this Command.
+     * @return true, if this command is only usable by admins of the server, false otherwise.
+     */
+    public boolean isAdminOnly(){
+        return this.isAdminOnly;
+    }
+
 
     /**
      * Getter method for the trigger string.

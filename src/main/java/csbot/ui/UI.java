@@ -14,7 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.application.Platform;
+
 
 
 
@@ -33,6 +33,7 @@ public class UI extends Application{
     private CSBot csBot;
     private Stage stage;
     private boolean botReady; 
+   
 
     public CSBot getBot(){
         return this.csBot;
@@ -59,9 +60,13 @@ public class UI extends Application{
         loader.setLocation( getClass().getClassLoader().getResource("botUI.fxml"));
         Parent root = loader.load();
 
+        //set the text area to accept logs
+        TextAreaAppender.setTextArea(textArea);
+
 
         //set up the sceen and show the UI
         Scene scene = new Scene(root);
+
         this.stage = stage;
         stage.setScene(scene);
         stage.show();

@@ -24,7 +24,7 @@ public class HelpCommand extends Command {
 	public String getHelpString() {
         return  "usage: !help <command>\n" +
                 "provides a detailed instruction on how to use a command.\n" +
-                "type !list to display a list of commands.";
+                "type !help to display a list of commands.";
 	}
 	
 	@Override

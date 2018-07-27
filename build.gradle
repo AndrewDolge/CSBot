@@ -43,4 +43,13 @@ repositories {
 
 mainClassName = "csbot.ui.UI"
 
+jar {
+  manifest {
+    attributes(
+      'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+      'Main-Class': "csbot.ui.UI"
+    )
+  }
+}
+
 
