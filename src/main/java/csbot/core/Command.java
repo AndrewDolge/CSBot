@@ -1,96 +1,82 @@
 package csbot.core;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 /**
- * Represents the basic components of all commands.
- * 
- * 
+ * Represents a Command that a user can invoke through a text channel.
  * 
  * @author Andrew Dolge
- * 
  */
-public abstract class Command implements Comparable<Command>{
-
-    private String        trigger;
-    private int           cooldown;
-    private AtomicBoolean onCooldown;
-
-    private static Logger logger = LoggerFactory.getLogger("Command");
+public interface Command{
 
     /**
-     * High level Constructor for the Command Class
-     * 
-     * @param trigger the text string that identifies this command.
-     * @param cooldown the amount of time, in seconds, that this command remains on cooldown after it is used.
+     * returns a string that signifies who created this command.
+     * @return a string with this command's author.
      */
-    public Command(String trigger, int cooldown){
-
-        if(trigger == null) {throw new IllegalArgumentException("Command.constructor: trigger is null");}
-        if(trigger == ""  ) {throw new IllegalArgumentException("Command.constructor: trigger is empty");}
-        if(cooldown < 0   ) {throw new IllegalArgumentException("Command.constructor: cooldown is negative");}
-
-        this.trigger = trigger;
-        this.cooldown = cooldown;
-        this.onCooldown = new AtomicBoolean(false);
-
-    }//constructor
+    public String getCredits();
 
     /**
-     * Getter method for the trigger string.
+     * returns a short description of this Command.
+     * Descriptions should be no longer than 20 characters or one sentence.
+     * This string will be displayed in the list of all commands for this bot.
      * 
-     * @return the trigger of this command.
+     * @return a string with a short description of this Command.
      */
-    public String getTrigger(){
-        return this.trigger;
-
-    }//getTrigger
+    public String getDescription();
 
     /**
-     * Getter method for the cooldown time of this command.
+     * returns a detailed description of this Command.
+     * Help Strings should give a description of all functions of this Command.
      * 
-     * @return the time, in seconds, that this second stays on cooldown.
+     * Here is an example of a proper Help String:
+     * 
+     *     usage: !help
+     *          provides a list of all Commands this bot has.
+     *     usage: !help <Command>
+     *          provides a detailed instruction on how to use the given <Command>.
+     * 
+     * @return a string with a detailed description of the Command.
+     *
      */
-    public int getCooldown(){
-        return this.cooldown;
-
-    }//getCooldown
+    public String getHelp();
 
     /**
-     * Checks to see if this command is on Cooldown.
+     * Returns a string that is used to invoke this Command in a text channel.
+     * This should uniquely identify this Command. If two Commands have the same trigger,
+     * preference will be given to the Command already loaded into the bot.
      * 
-     * @return true, if this command is on cooldown. False otherwise.
+     * The user will be able to invoke this Command with the prefix "!" and the trigger string.
+     * 
+     * @return a string that is used to invoke the Command.
+     * 
      */
-    public boolean isOnCooldown(){
-        return this.onCooldown.get();
+    public String getTrigger();
 
-    }//isOnCooldown
-    
     /**
-     * Sets whether this command is on Command
+     * Executes the given Command in response to the given event from a user.
+     * This method is responsible for parsing the message of the user and responding by
+     * accessing the user and channel through the given event.
      * 
-     * @param value the cooldown status
+     * @param event the discord MessageReceivedEvent to process.
+     * @param message the message string the user sent to invoke the bot.
      */
-    public void setOnCooldown(boolean value) {
-       onCooldown.set(value);
-    }
+    public void execute(MessageReceivedEvent event, String message);
 
-    @Override
     /**
-     * Compares two Commands by their triggers. 
+     * attempt to send a private message to the author of this event.
      * 
-     * @returns 0 if the triggers are the same, a negative number if this command's trigger is lexographically less than the other commands, and positive otherwise.
+     * @param event   the event object received.
+     * @param message the message to return to the user.
+     * 
      */
-    public int compareTo(Command other){
+    public static void sendPrivateMessageToAuthor(MessageReceivedEvent event, String message){
+        try{
+            event.getAuthor().openPrivateChannel().complete().sendMessage(message).queue();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
 
-        return this.getTrigger().compareTo(other.getTrigger());
-    }//compareTo
-
+    }//sendPrivateMessageToChannel
 
     /**
      * sends a message to the channel that this message was received.
@@ -104,7 +90,6 @@ public abstract class Command implements Comparable<Command>{
         event.getChannel().sendMessage(message).queue();
         }catch(Exception e){
             e.printStackTrace();
-            logger.error("Command.sendMessageToChannel: Exception thrown.",e);
         }
     }//sendMessageToChannel
 
@@ -120,7 +105,7 @@ public abstract class Command implements Comparable<Command>{
     }//sendMessageToChannel
 
     /**
-     * modifies the given string to use CSS style onto a message string
+     * modifies the given string with discord formatting.
      * 
      * @param toFormat the string to format
      * @returns the formatted string
@@ -129,51 +114,4 @@ public abstract class Command implements Comparable<Command>{
         return "```\n" + toFormat + "\n```";
     }//formatText
 
-    /**
-     * places this command on cooldown.
-     * sleeps the current thread that this command runs on.
-     * 
-     */
-    public void startCooldown(){
-        setOnCooldown(true);
-        try{
-            Thread.sleep(cooldown * 1000);
-        }catch(InterruptedException ie){
-            
-        }
-
-        setOnCooldown(false);
-    }//startCoolDown
-
-    /**
-     * Processes the current given Event.
-     * The text of the message can be found by calling getMessage().getContentRaw().
-     * 
-     * This method is also responsible for responding to the user by queueing a message in the
-     * channel this message was received in.
-     * This can be accomplished 
-     * 
-     * @param event the incoming event that contains the message
-     * 
-     */
-    public abstract void process(MessageReceivedEvent event);
-
-    /**
-     * Retrieves the Help String for this command.
-     * The Help string should include detailed instructions on how to use this command,
-     * including all the different usages of this command.
-     * 
-     * @return The Help String of this command.
-     */
-    public abstract String getHelpString();
-
-    /**
-     * returns a brief description of this command.
-     * This string should be less than 20 characters, and give the user a basic idea of what the command does.
-     * 
-     * @return a brief description of this command.
-     */
-    public abstract String getDescription();
-
-
-}//class
+}

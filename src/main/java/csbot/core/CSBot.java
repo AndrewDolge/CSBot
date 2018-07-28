@@ -25,12 +25,13 @@ public class CSBot extends ListenerAdapter{
     private ExecutorService    commandExecutor;
     private ArrayList<Command> commandList;
     private boolean            running;
-    private String             prefix;
+    private final String       prefix = "!";
     
- 
+    //TODO: change over commands to a HashMap.
+    //TODO: Reimplement cooldowns.
 
 
-    private static final Logger logger = LoggerFactory.getLogger("CSBot");
+    private static final Logger logger = LoggerFactory.getLogger("csbot.core.CSBot");
     
     
     public CSBot(BotProperties properties){
@@ -38,7 +39,6 @@ public class CSBot extends ListenerAdapter{
         this.properties      = properties;
         this.commandList     = new ArrayList<Command>();
         this.running         = false;
-        this.prefix          = "!";
 
         loadCommands();
 
@@ -58,13 +58,6 @@ public class CSBot extends ListenerAdapter{
     public boolean isRunning(){
         return this.running;
     }//isRunning
-
-    /**
-     * setter method for the prefix.
-     */
-    public void setPrefix(String prefix){
-        this.prefix = prefix;
-    }//setRunning
 
     /**
      * getter method for the prefix.
@@ -99,7 +92,7 @@ public class CSBot extends ListenerAdapter{
             logger.warn("could not load commands, Property commandNames array is null.");
         }
 
-        this.addCommand(new HelpCommand(1, this));
+        this.addCommand(new HelpCommand(this));
 
     }//loadCommands
 
@@ -158,7 +151,7 @@ public class CSBot extends ListenerAdapter{
         //compare this command to all other commands, checking to see if there is a trigger conflict
         for(Command command: this.commandList){
 
-            if(command.compareTo(toAdd) == 0){
+            if(command.getTrigger().equalsIgnoreCase(toAdd.getTrigger())){
                logger.warn("CSBot.addCommand: Command has same trigger as existing Command. Failed to add Command.");
                 return false;
             }
@@ -181,7 +174,7 @@ public class CSBot extends ListenerAdapter{
      */
     public String getHelp(String commandTrigger){
         
-        return this.findCommand(commandTrigger).getHelpString();
+        return this.findCommand(commandTrigger).getHelp();
     }//getDescription
 
     /**
@@ -228,12 +221,8 @@ public class CSBot extends ListenerAdapter{
                             
                             try{
                                 //execute the command
-                                if(!toExecute.isOnCooldown()){
-                                    toExecute.process(event);
-                                    toExecute.startCooldown();
-                                }
-                                
-                            
+                                toExecute.execute(event,event.getMessage().getContentRaw());
+
                             }catch(Exception e){
                                 e.printStackTrace();
                                 logger.error("CSBot.onMessageReceived: Command " + toExecute.getTrigger() + " threw exception", e);

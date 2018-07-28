@@ -4,14 +4,14 @@ package csbot.core;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 
-public class HelpCommand extends Command {
+public class HelpCommand implements Command {
     
     private CSBot bot;
 
-	public HelpCommand( int cooldown, CSBot bot) {
-        super("help", cooldown); 
+	public HelpCommand( CSBot bot) {
+       
         this.bot = bot;
-	}
+    }
 	
 	@Override
     /**
@@ -21,10 +21,11 @@ public class HelpCommand extends Command {
      * 
      * @return The Help String of this command.
      */
-	public String getHelpString() {
-        return  "usage: !help <command>\n" +
-                "provides a detailed instruction on how to use a command.\n" +
-                "type !list to display a list of commands.";
+	public String getHelp() {
+        return  "usage: !help\n" + 
+                "\tprovides a list of all Commands this bot has.\n" + 
+                "usage: !help <Command>\n" +
+                "\tprovides a detailed instruction on how to use the given <Command>.\n";
 	}
 	
 	@Override
@@ -38,13 +39,12 @@ public class HelpCommand extends Command {
      * @param event the incoming event that contains the message
      * 
      */
-	public void process(MessageReceivedEvent event) {
+	public void execute(MessageReceivedEvent event, String message) {
         String toUserString = null;
-        String message = event.getMessage().getContentRaw();
 
         //TODO: get rid of bot instance
         if(message.split(" ").length == 2 &&  bot.findCommand(message.split(" ")[1]) != null){
-            toUserString = bot.findCommand(message.split(" ")[1]).getHelpString() ;
+            toUserString = bot.findCommand(message.split(" ")[1]).getHelp() ;
 
         }else if(message.split(" ").length == 1){
 
@@ -54,7 +54,7 @@ public class HelpCommand extends Command {
         if(toUserString != null){
             Command.sendMessageWithMention(event, Command.formatText(toUserString));
         }
-	}
+	}//execute
 	
 	@Override
     /**
@@ -65,5 +65,15 @@ public class HelpCommand extends Command {
      */
 	public String getDescription() {
 		return "provides instructions for a command."; 
+	}
+
+	@Override
+	public String getCredits() {
+		return "Andrew Dolge: 7/28/2018";
+	}
+
+	@Override
+	public String getTrigger() {
+		return "help";
 	}	
 }
