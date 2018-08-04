@@ -1,16 +1,29 @@
 package csbot.core;
 
 
+import java.util.Map;
+
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 
 public class HelpCommand implements Command {
     
-    private CSBot bot;
+    private Map<String, String> map;
+    private String descriptionList;
 
-	public HelpCommand( CSBot bot) {
-       
-        this.bot = bot;
+    /**
+     * @param map the map to set
+     */
+    public void setMap(Map<String, String> map) {
+      
+        this.map = map;
+    }
+
+    /**
+     * @param descriptionList the descriptionList to set
+     */
+    public void setDescriptionList(String descriptionList) {
+        this.descriptionList = descriptionList;
     }
 	
 	@Override
@@ -42,17 +55,17 @@ public class HelpCommand implements Command {
 	public void execute(MessageReceivedEvent event, String message) {
         String toUserString = null;
 
-        //TODO: get rid of bot instance
-        if(message.split(" ").length == 2 &&  bot.findCommand(message.split(" ")[1]) != null){
-            toUserString = bot.findCommand(message.split(" ")[1]).getHelp() ;
+        if(message.split(" ").length == 2 && map.get(message.split(" ")[1]) != null){
+            if(map == null){throw new NullPointerException("HelpCommand.execute: map is null.");}
+            toUserString = map.get(message.split(" ")[1]) ;
 
         }else if(message.split(" ").length == 1){
-
-            toUserString = bot.getDescriptionList();
+            if(descriptionList == null){throw new NullPointerException("HelpCommand.execute: descriptionList is null");}
+            toUserString = this.descriptionList;
         }
 
         if(toUserString != null){
-            Command.sendMessageWithMention(event, Command.formatText(toUserString));
+           DiscordMessageUtil.sendMessageWithMention(event, DiscordMessageUtil.formatText(toUserString));
         }
 	}//execute
 	
@@ -65,11 +78,6 @@ public class HelpCommand implements Command {
      */
 	public String getDescription() {
 		return "provides instructions for a command."; 
-	}
-
-	@Override
-	public String getCredits() {
-		return "Andrew Dolge: 7/28/2018";
 	}
 
 	@Override

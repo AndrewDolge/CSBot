@@ -1,8 +1,5 @@
 package csbot.core;
 
-import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -22,22 +19,21 @@ public class CSBot extends ListenerAdapter{
 
     private BotProperties      properties;
     private JDA                csJDA;
-    private ExecutorService    commandExecutor;
-    private ArrayList<Command> commandList;
     private boolean            running;
+    private CommandManager     commandManager;
     private final String       prefix = "!";
     
-    //TODO: change over commands to a HashMap.
-    //TODO: Reimplement cooldowns.
+ 
 
 
     private static final Logger logger = LoggerFactory.getLogger("csbot.core.CSBot");
+	private static final int DEFAULT_COOLDOWN = 1;
     
     
     public CSBot(BotProperties properties){
         
         this.properties      = properties;
-        this.commandList     = new ArrayList<Command>();
+        this.commandManager  = new CommandManager();
         this.running         = false;
 
         loadCommands();
@@ -48,7 +44,7 @@ public class CSBot extends ListenerAdapter{
     /**
      * setter method for the running field
      */
-    public void setRunning(boolean value){
+    private void setRunning(boolean value){
         this.running = value;
     }//setRunning
 
@@ -92,7 +88,8 @@ public class CSBot extends ListenerAdapter{
             logger.warn("could not load commands, Property commandNames array is null.");
         }
 
-        this.addCommand(new HelpCommand(this));
+        HelpCommand help = new HelpCommand();
+        this.addCommand(help);
 
     }//loadCommands
 
@@ -107,7 +104,7 @@ public class CSBot extends ListenerAdapter{
     public boolean start(){
         
         try{
-            commandExecutor = Executors.newCachedThreadPool(); 
+            this.commandManager.start();
 
             csJDA = new JDABuilder(AccountType.BOT)
             .setToken(properties.getToken())
@@ -131,8 +128,7 @@ public class CSBot extends ListenerAdapter{
     public void shutdown(){
         
         csJDA.shutdownNow();
-        commandExecutor.shutdownNow();
-        commandList.clear();
+        this.commandManager.shutdown();
         
         setRunning(false);
     }//shutdown
@@ -147,51 +143,19 @@ public class CSBot extends ListenerAdapter{
      * 
      */
     public boolean addCommand(Command toAdd){
+        boolean added = this.commandManager.addCommand(toAdd, DEFAULT_COOLDOWN);
 
-        //compare this command to all other commands, checking to see if there is a trigger conflict
-        for(Command command: this.commandList){
+        if(added){
 
-            if(command.getTrigger().equalsIgnoreCase(toAdd.getTrigger())){
-               logger.warn("CSBot.addCommand: Command has same trigger as existing Command. Failed to add Command.");
-                return false;
-            }
+            logger.debug("Command: (" + toAdd.getTrigger() + ") added! Created by: " + toAdd.getCredits());
+        }else{
+            logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add! Created by: " + toAdd.getCredits());
         }
 
-        this.commandList.add(toAdd);
-        logger.debug("CSBot.addCommand: Command " + toAdd.getTrigger() + " added!");
-        
-        return true;
+        return added;
 
     }//addCommand  
 
-
-    /**
-     * gets the help string from a command with the given commandTrigger
-     * 
-     * @param commandTrigger a string containing the desired command's trigger.
-     * @return the help string for the desired command
-     * 
-     */
-    public String getHelp(String commandTrigger){
-        
-        return this.findCommand(commandTrigger).getHelp();
-    }//getDescription
-
-    /**
-     * returns a string containing a list of all this bot's command descriptions.
-     * 
-     * @return a string containing all of this bot's command descriptions.
-     */
-    public String getDescriptionList(){
-
-        StringBuilder sb = new StringBuilder();
-
-        for(Command command: commandList){
-            sb.append(command.getTrigger() + ": " + command.getDescription() + "\n");
-        }
-
-        return sb.toString();
-    }//getList
 
     /**
      * called whenever a discord messsage appears in chat.
@@ -206,69 +170,16 @@ public class CSBot extends ListenerAdapter{
         String message = event.getMessage().getContentRaw();
         //check to see if the message starts with the prefix
 
-        if(message.startsWith(prefix) ){
+        if(this.isRunning() && message.startsWith(prefix)  ){
 
-            //find the appropriate command
-            Command toExecute = findCommand(message.split(" ")[0].substring(1));
+            String trigger = message.split(" ")[0].substring(1);
 
-            if(isRunning() && toExecute != null){
-                logger.debug("CSBot.onMessageReceived: Executing Command "+ toExecute.getTrigger() + " for user: " + event.getAuthor().getName());
-                commandExecutor.execute(
-                    //create a new Runnable implementation. Runs on it's own thread.
-                    new Runnable(){
-                        //method called when the Runnable is executed.
-                        public void run(){
-                            
-                            try{
-                                //execute the command
-                                toExecute.execute(event,event.getMessage().getContentRaw());
-
-                            }catch(Exception e){
-                                e.printStackTrace();
-                                logger.error("CSBot.onMessageReceived: Command " + toExecute.getTrigger() + " threw exception", e);
-                                
-                            }//catch
-                        }//run
-                    }//Runnable
-                );//execute
-    
+            if(commandManager.contains(trigger)){
+                commandManager.execute(event,trigger);
             }else{
-          
-             logger.error("CSBot.onMessageReceived: No Command found for message: " + message.split(" ")[0].substring(1) );
-            }//ifRunning
-
-        }//if prefix
-
-    }//onMessageReceived
-
-    /**
-     * gets the appropriate command that matches the given command trigger
-     * 
-     * @param commandTrigger the trigger of the desired command
-     * @return the Command whose trigger exists within the message, null otherwise
-     * 
-     */
-    public Command findCommand(String commandTrigger){
-        Command result = null;
-
-        try{
-    
-            for(Command command: this.commandList){
-                //compares each command's trigger to 
-
-                if(command.getTrigger().equals(commandTrigger)) {
-                   result = command;
-                }
-
+                logger.error("CSBot.onMessageReceived: No Command found for message: " + message );
             }
-        
-        }catch(Exception e){
-         e.printStackTrace();
-        }
-       
-        return result;
-    }//findCommand
-
-
+        }//if running and prefix
+    }//onMessageReceived
 }//class
 

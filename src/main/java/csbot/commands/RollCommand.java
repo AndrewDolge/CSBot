@@ -1,8 +1,8 @@
-package csbot.core;
+package csbot.commands;
 
 import java.util.Random;
 import csbot.core.Command;
-
+import csbot.core.DiscordMessageUtil;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 public class RollCommand implements Command {
@@ -55,7 +55,7 @@ public class RollCommand implements Command {
         }
 
         if(toUserString != null){
-            Command.sendMessageWithMention(event, Command.formatText(toUserString));
+            DiscordMessageUtil.sendMessageWithMention(event, DiscordMessageUtil.formatText(toUserString));
         }
 	}
 	
@@ -70,10 +70,6 @@ public class RollCommand implements Command {
 		return "rolls XdY dice."; 
     }
 
-	@Override
-	public String getCredits() {
-		return "Andrew Dolge";
-	}
 
 	@Override
 	public String getTrigger() {
