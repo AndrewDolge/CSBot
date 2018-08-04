@@ -147,9 +147,9 @@ public class CSBot extends ListenerAdapter{
 
         if(added){
 
-            logger.debug("Command: (" + toAdd.getTrigger() + ") added! Created by: " + toAdd.getCredits());
+            logger.debug("Command: (" + toAdd.getTrigger() + ") added!");
         }else{
-            logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add! Created by: " + toAdd.getCredits());
+            logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add!");
         }
 
         return added;
