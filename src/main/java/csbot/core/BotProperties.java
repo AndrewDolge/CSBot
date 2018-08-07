@@ -46,49 +46,5 @@ public class BotProperties{
 
     }
 
-    /**
-     * gets the names of the commands to be loaded by the bot
-     * 
-     */
-    public String[] getCommands(){
-
-        Properties prop = new Properties();
-        String result   = null;
-        
-        try( FileReader reader = new FileReader(propertyFile)){
-        
-            prop.load(reader);
-            result = prop.getProperty("CommandNames");
-
-        }catch(IOException ioe){
-            logger.error("BotProperties.getToken: IOException thrown.", ioe);
-        }
-
-       return result.split(",");
-
-    }//getCommands
-
-        /**
-     * gets the names of the commands to be loaded by the bot
-     * 
-     */
-    public String[] getCommandPaths(){
-
-        Properties prop = new Properties();
-        String result   = null;
-        
-        try( FileReader reader = new FileReader(propertyFile)){
-        
-            prop.load(reader);
-            result = prop.getProperty("CommandPaths");
-
-        }catch(IOException ioe){
-            logger.error("BotProperties.getToken: IOException thrown.", ioe);
-        }
-
-       return result.split(",");
-
-    }//getCommands
-
 
 }

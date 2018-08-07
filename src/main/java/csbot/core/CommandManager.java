@@ -149,6 +149,7 @@ public class CommandManager{
 
             this.commandMap.put(command.getTrigger(), new CooldownCommand(command, cooldown));
             result = true;
+            
         }
         return result;
     }//addCommand

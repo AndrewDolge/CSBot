@@ -2,6 +2,17 @@ package csbot.core;
 
 
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.security.Policy;
+import java.util.Iterator;
+import java.util.ServiceLoader;
+
 import org.slf4j.Logger;
 
 import net.dv8tion.jda.core.AccountType;
@@ -36,7 +47,14 @@ public class CSBot extends ListenerAdapter{
         this.commandManager  = new CommandManager();
         this.running         = false;
 
-        loadCommands();
+        //Policy.setPolicy(new BotSecurityPolicy());
+        //System.setSecurityManager(new SecurityManager());
+
+        loadCommandsFromJars();
+        HelpCommand help = new HelpCommand();
+        this.addCommand(help);
+        help.setDescriptionList(this.commandManager.getDescriptions());
+        help.setMap(this.commandManager.getHelpText());
 
     }//CSBot
 
@@ -62,37 +80,31 @@ public class CSBot extends ListenerAdapter{
         return this.prefix;
     }//isRunning
 
+
     /**
-     * loads the commands from the BotProperties.
+     * Loads in commands from Jar files in the /plugins directory.
+     * 
+     * 
      */
-    private void loadCommands(){
-        String[] commandNames = properties.getCommands();
-        Command toAdd = null;
+    public void loadCommandsFromJars(){
+       
+        FilenameFilter jarFilter =  (dir, name) ->  name.endsWith(".jar");
+     
+        for(File jarFile : getPluginDirectory().listFiles(jarFilter)){
 
-        if(commandNames != null){
+            try {
+                ServiceLoader<Command> serviceLoader = ServiceLoader.load(Command.class, new CommandClassLoader(jarFile.toURI().toURL()));
+                Iterator<Command> iter = serviceLoader.iterator();
 
-            //for every command
-            for(int i = 0; i < commandNames.length; i++){
-                try{
-
-                    toAdd = (Command) Class.forName(commandNames[i]).getConstructor().newInstance();
-                    this.addCommand(toAdd);
-
-                }catch(Exception e){
-                    logger.warn("could not load command " + commandNames[i],e);
-                }
+                while(iter.hasNext()){
                 
-            }//for
-
-        }else{
-            logger.warn("could not load commands, Property commandNames array is null.");
-        }
-
-        HelpCommand help = new HelpCommand();
-        this.addCommand(help);
-
-    }//loadCommands
-
+                    addCommand(iter.next());
+                } 
+            } catch (IOException ioe) {
+                logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jarFile.toString(),ioe);
+            }
+        }//for jarFile
+    }//loadCommandsFromJar
 
     /**
      * Starts up the bot.
@@ -147,9 +159,9 @@ public class CSBot extends ListenerAdapter{
 
         if(added){
 
-            logger.debug("Command: (" + toAdd.getTrigger() + ") added! Created by: " + toAdd.getCredits());
+            logger.debug("Command: (" + toAdd.getTrigger() + ") added! ");
         }else{
-            logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add! Created by: " + toAdd.getCredits());
+            logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add!");
         }
 
         return added;
@@ -181,5 +193,42 @@ public class CSBot extends ListenerAdapter{
             }
         }//if running and prefix
     }//onMessageReceived
+
+    public static File getApplicationDirectory(){
+        try {
+			return new File(CSBot.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
+		} catch (URISyntaxException e) {
+			logger.error("CSBot.getApplicationDirectory: bad URI",e);
+        }
+        return null;
+    }
+
+    public static File getPluginDirectory(){
+        try{
+            File parent = getApplicationDirectory();
+            File pluginDir = new File(parent.getAbsolutePath() + File.separatorChar + "plugins");
+            
+            return pluginDir;
+        }catch(Exception e){
+            logger.error("error accessing plugin directory",e);
+        }
+
+        return null;
+    }
+
+
+    public static File getPluginDataDirectory(){
+        try{
+            File parent = getApplicationDirectory();
+            File pluginDir = new File(parent.getAbsolutePath() + File.separatorChar + "data");
+            
+            return pluginDir;
+        }catch(Exception e){
+            logger.error("error accessing plugin directory",e);
+        }
+
+        return null;
+    }
+
 }//class
 
