@@ -15,3 +15,5 @@ build/classes/java/main/FoodTrackCommand.class
 build/classes/java/main/UIController.class
 build/classes/java/main/Token.class
 src/main/java/core/Token.java
+*.properties
+.vscode/launch.json

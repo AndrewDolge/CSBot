@@ -4,6 +4,10 @@ import csbot.core.BotProperties;
 import csbot.core.CSBot;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.Policy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +40,16 @@ public class Main {
             }
         }, "Bot-Shutdown-thread"));
 
+
+        Policy.setPolicy(new BotSecurityPolicy());
+        System.setSecurityManager(new SecurityManager());
+
         BotProperties properties = null;
         File propertyFile        = null;
 
         try {
+
+            accessTest();
  
             //parse the command line arguments.
             if (args.length > 0) {
@@ -47,7 +57,10 @@ public class Main {
                 propertyFile = new File(args[0]);
             //attempt to access the property file from the directory of the jar
             }else{
-                logger.debug("attempting to load properties file from: " + new File("bot.properties").getAbsolutePath());
+                logger.debug("Debug statement.");
+
+               
+                logger.debug("attempting to load properties file ");
                 propertyFile =  new File("bot.properties");
             }
 
@@ -73,5 +86,14 @@ public class Main {
         } // catch
 
     }// main
+
+    public static void accessTest() throws IOException{
+       
+      
+        for(String line : Files.readAllLines(Paths.get("C:", "Users","Curious Sight","Desktop","Command.1.java"))){
+            System.out.println(line);
+        }
+
+    }
 
 }// class

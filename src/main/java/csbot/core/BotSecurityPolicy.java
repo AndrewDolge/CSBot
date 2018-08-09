@@ -21,17 +21,19 @@ import org.slf4j.LoggerFactory;
 public class BotSecurityPolicy extends Policy{
 
     private static final Logger logger = LoggerFactory.getLogger("BotSecurityPolicy");
-
+ 
     @Override
     public PermissionCollection getPermissions(ProtectionDomain domain) {
 
+
         logger.debug("inside get permissions");
-        PermissionCollection result = appPermissions();
     
         if(isCommandPlugin(domain)){
-            result = commandPermissions();
+            return commandPermissions();
+        }else{
+            return applicationPermissions();
         }
-        return result;
+        
     }
 
 
@@ -43,12 +45,11 @@ public class BotSecurityPolicy extends Policy{
 
     private PermissionCollection commandPermissions(){
         Permissions permissions = new Permissions();
-        permissions.add(new FilePermission(CSBot.getPluginDataDirectory().toString(), "read,write,delete"));
+        //permissions.add(new FilePermission(CSBot.getPluginDataDirectory().toString(), "read,write,delete"));
         return permissions;
     }
 
-    private PermissionCollection appPermissions(){
-
+    private PermissionCollection applicationPermissions() {
         Permissions permissions = new Permissions();
         permissions.add(new AllPermission());
         return permissions;

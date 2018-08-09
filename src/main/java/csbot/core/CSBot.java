@@ -47,9 +47,6 @@ public class CSBot extends ListenerAdapter{
         this.commandManager  = new CommandManager();
         this.running         = false;
 
-        //Policy.setPolicy(new BotSecurityPolicy());
-        //System.setSecurityManager(new SecurityManager());
-
         loadCommandsFromJars();
         HelpCommand help = new HelpCommand();
         this.addCommand(help);
@@ -92,16 +89,15 @@ public class CSBot extends ListenerAdapter{
      
         for(File jarFile : getPluginDirectory().listFiles(jarFilter)){
 
-            try {
-                ServiceLoader<Command> serviceLoader = ServiceLoader.load(Command.class, new CommandClassLoader(jarFile.toURI().toURL()));
-                Iterator<Command> iter = serviceLoader.iterator();
+            try( CommandClassLoader commandLoader = new CommandClassLoader(jarFile.toURI().toURL());) {
 
-                while(iter.hasNext()){
-                
-                    addCommand(iter.next());
-                } 
-            } catch (IOException ioe) {
-                logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jarFile.toString(),ioe);
+                Class<?> commandClass = commandLoader.loadClass("RollCommand");
+                Command toAdd = (Command) commandClass.getConstructor().newInstance();
+            
+                addCommand( toAdd);
+
+            } catch (Exception e) {
+                logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jarFile.toString(),e);
             }
         }//for jarFile
     }//loadCommandsFromJar
@@ -229,6 +225,7 @@ public class CSBot extends ListenerAdapter{
 
         return null;
     }
+
 
 }//class
 
