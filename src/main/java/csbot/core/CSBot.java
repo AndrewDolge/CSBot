@@ -1,19 +1,15 @@
 package csbot.core;
 
 
-import org.slf4j.LoggerFactory;
-
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
-import java.security.Policy;
-import java.util.Iterator;
-import java.util.ServiceLoader;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -37,7 +33,7 @@ public class CSBot extends ListenerAdapter{
  
 
 
-    private static final Logger logger = LoggerFactory.getLogger("csbot.core.CSBot");
+    //private static final Logger logger = LoggerFactory.getLogger("csbot.core.CSBot");
 	private static final int DEFAULT_COOLDOWN = 1;
     
     
@@ -91,13 +87,22 @@ public class CSBot extends ListenerAdapter{
 
             try( CommandClassLoader commandLoader = new CommandClassLoader(jarFile.toURI().toURL());) {
 
-                Class<?> commandClass = commandLoader.loadClass("RollCommand");
-                Command toAdd = (Command) commandClass.getConstructor().newInstance();
-            
-                addCommand( toAdd);
+                //read the jar files config file        
+                InputStream inputStream = commandLoader.getResourceAsStream("Command.config");
 
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+                    while((line = reader.readLine()) != null){
+
+                        Class<?> commandClass = commandLoader.loadClass(line);
+                        Command toAdd = (Command) commandClass.getConstructor().newInstance();
+                    
+                        addCommand( toAdd);
+                        
+                    }
+      
             } catch (Exception e) {
-                logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jarFile.toString(),e);
+               // logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jarFile.toString(),e);
             }
         }//for jarFile
     }//loadCommandsFromJar
@@ -155,9 +160,9 @@ public class CSBot extends ListenerAdapter{
 
         if(added){
 
-            logger.debug("Command: (" + toAdd.getTrigger() + ") added! ");
+           // logger.debug("Command: (" + toAdd.getTrigger() + ") added! ");
         }else{
-            logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add!");
+           // logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add!");
         }
 
         return added;
@@ -185,7 +190,7 @@ public class CSBot extends ListenerAdapter{
             if(commandManager.contains(trigger)){
                 commandManager.execute(event,trigger);
             }else{
-                logger.error("CSBot.onMessageReceived: No Command found for message: " + message );
+               // logger.error("CSBot.onMessageReceived: No Command found for message: " + message );
             }
         }//if running and prefix
     }//onMessageReceived
@@ -194,7 +199,7 @@ public class CSBot extends ListenerAdapter{
         try {
 			return new File(CSBot.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
 		} catch (URISyntaxException e) {
-			logger.error("CSBot.getApplicationDirectory: bad URI",e);
+			//logger.error("CSBot.getApplicationDirectory: bad URI",e);
         }
         return null;
     }
@@ -206,7 +211,7 @@ public class CSBot extends ListenerAdapter{
             
             return pluginDir;
         }catch(Exception e){
-            logger.error("error accessing plugin directory",e);
+           // logger.error("error accessing plugin directory",e);
         }
 
         return null;
@@ -220,7 +225,7 @@ public class CSBot extends ListenerAdapter{
             
             return pluginDir;
         }catch(Exception e){
-            logger.error("error accessing plugin directory",e);
+           // logger.error("error accessing plugin directory",e);
         }
 
         return null;
