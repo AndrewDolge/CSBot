@@ -1,15 +1,10 @@
 package csbot.core;
 
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URISyntaxException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -24,24 +19,23 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
  */
 public class CSBot extends ListenerAdapter{
 
-    private BotProperties      properties;
     private JDA                csJDA;
     private boolean            running;
     private CommandManager     commandManager;
     private final String       prefix = "!";
-    
- 
+    private BotPropertyLoader loader;
+  
 
+    private static final CustomLogger logger = new CustomLogger("csbot.core.CSBot");
+    private static final int DEFAULT_COOLDOWN = 1;
 
-    //private static final Logger logger = LoggerFactory.getLogger("csbot.core.CSBot");
-	private static final int DEFAULT_COOLDOWN = 1;
     
-    
-    public CSBot(BotProperties properties){
-        
-        this.properties      = properties;
+    public CSBot(BotPropertyLoader loader){
+
+        this.loader = loader;
         this.commandManager  = new CommandManager();
         this.running         = false;
+       
 
         loadCommandsFromJars();
         HelpCommand help = new HelpCommand();
@@ -50,8 +44,7 @@ public class CSBot extends ListenerAdapter{
         help.setMap(this.commandManager.getHelpText());
 
     }//CSBot
-
-
+    
     /**
      * setter method for the running field
      */
@@ -73,7 +66,6 @@ public class CSBot extends ListenerAdapter{
         return this.prefix;
     }//isRunning
 
-
     /**
      * Loads in commands from Jar files in the /plugins directory.
      * 
@@ -87,22 +79,30 @@ public class CSBot extends ListenerAdapter{
 
             try( CommandClassLoader commandLoader = new CommandClassLoader(jarFile.toURI().toURL());) {
 
-                //read the jar files config file        
-                InputStream inputStream = commandLoader.getResourceAsStream("Command.config");
+                //get the InputStream for the Configuration file
+                InputStream inputStream = commandLoader.getResourceAsStream("Command.properties");
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                    while((line = reader.readLine()) != null){
+                //get the list of commands listed in the properties file
+                CommandPropertyLoader propertyLoader = new CommandPropertyLoader(inputStream);
 
-                        Class<?> commandClass = commandLoader.loadClass(line);
-                        Command toAdd = (Command) commandClass.getConstructor().newInstance();
-                    
-                        addCommand( toAdd);
-                        
-                    }
-      
+                //print out the plugin information
+                logger.debug("Loading Plugin: "  +  propertyLoader.getName() +" Version: " + propertyLoader.getVersion() + "  by " + propertyLoader.getAuthor() ); 
+                String[] commands = propertyLoader.getCommands();
+
+                for(String command : commands){
+  
+                    try{
+
+                        Command toAdd = (Command) commandLoader.loadClass(command).getConstructor().newInstance();
+                        addCommand(toAdd);
+
+                    }catch(Exception e){
+                        logger.error("Could not load Command: " + command + "From file: " + jarFile.getName(), e);
+                    }  
+                }//for each command
+                
             } catch (Exception e) {
-               // logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jarFile.toString(),e);
+               logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jarFile.toString(),e);
             }
         }//for jarFile
     }//loadCommandsFromJar
@@ -116,16 +116,19 @@ public class CSBot extends ListenerAdapter{
      */
     public boolean start(){
         
+       
+
         try{
+            String token = loader.getToken();
             this.commandManager.start();
 
             csJDA = new JDABuilder(AccountType.BOT)
-            .setToken(properties.getToken())
+            .setToken(token)
             .addEventListener(this)
             .buildBlocking();
         }catch(Exception e){
 
-            e.printStackTrace();
+            logger.error("Exception thrown while starting bot", e);
             return false;
         }
 
@@ -160,15 +163,14 @@ public class CSBot extends ListenerAdapter{
 
         if(added){
 
-           // logger.debug("Command: (" + toAdd.getTrigger() + ") added! ");
+            logger.debug("Command: (" + toAdd.getTrigger() + ") added! ");
         }else{
-           // logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add!");
+            logger.warn("Command: (" + toAdd.getTrigger() + ") failed to add!");
         }
 
         return added;
 
     }//addCommand  
-
 
     /**
      * called whenever a discord messsage appears in chat.
@@ -190,7 +192,7 @@ public class CSBot extends ListenerAdapter{
             if(commandManager.contains(trigger)){
                 commandManager.execute(event,trigger);
             }else{
-               // logger.error("CSBot.onMessageReceived: No Command found for message: " + message );
+                logger.error("CSBot.onMessageReceived: No Command found for message: " + message );
             }
         }//if running and prefix
     }//onMessageReceived
@@ -199,7 +201,7 @@ public class CSBot extends ListenerAdapter{
         try {
 			return new File(CSBot.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
 		} catch (URISyntaxException e) {
-			//logger.error("CSBot.getApplicationDirectory: bad URI",e);
+			logger.error("CSBot.getApplicationDirectory: bad URI",e);
         }
         return null;
     }
@@ -211,26 +213,11 @@ public class CSBot extends ListenerAdapter{
             
             return pluginDir;
         }catch(Exception e){
-           // logger.error("error accessing plugin directory",e);
+            logger.error("error accessing plugin directory",e);
         }
 
         return null;
     }
-
-
-    public static File getPluginDataDirectory(){
-        try{
-            File parent = getApplicationDirectory();
-            File pluginDir = new File(parent.getAbsolutePath() + File.separatorChar + "data");
-            
-            return pluginDir;
-        }catch(Exception e){
-           // logger.error("error accessing plugin directory",e);
-        }
-
-        return null;
-    }
-
 
 }//class
 

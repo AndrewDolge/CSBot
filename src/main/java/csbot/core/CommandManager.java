@@ -6,9 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 public class CommandManager{
@@ -16,7 +14,7 @@ public class CommandManager{
     private HashMap<String, CooldownCommand> commandMap;
     private ExecutorService    commandExecutor;
 
-    private static final Logger logger = LoggerFactory.getLogger("csbot.CommandManager");
+    private static final CustomLogger logger = new CustomLogger("csbot.CommandManager");
 
 
     public CommandManager(){
@@ -74,10 +72,14 @@ public class CommandManager{
 						@Override
 						public void run() {
                             try {
-                                logger.debug("Executing Command (" + toExecute.getCommand().getTrigger() +") for user: " + event.getAuthor().getName());
-                                toExecute.getCommand().execute(event, event.getMessage().getContentRaw());
+                                if(!(event.getJDA().getStatus() == JDA.Status.SHUTDOWN || event.getJDA().getStatus() == JDA.Status.SHUTTING_DOWN)){
 
-                                Thread.sleep(toExecute.getCooldown() * 1000);
+                                    logger.debug("Executing Command (" + toExecute.getCommand().getTrigger() +") for user: " + event.getAuthor().getName());
+                                    
+                                    toExecute.getCommand().execute(event, event.getMessage().getContentRaw());
+
+                                    Thread.sleep(toExecute.getCooldown() * 1000);
+                                }
                               
                             } catch (Exception e) {
                                 logger.error("\tException thrown Executing Command (" + toExecute.getCommand().getTrigger() +") for user: " + event.getAuthor().getName(),e);
@@ -105,7 +107,6 @@ public class CommandManager{
     public void shutdown(){
         this.commandExecutor.shutdownNow();
     }//shutdown
-
 
     /**
      * Determines whether the CommandManager currently contains a Command that maps to the given trigger.

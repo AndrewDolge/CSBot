@@ -1,7 +1,5 @@
 package csbot.core;
 
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.security.AllPermission;
 import java.security.PermissionCollection;
 import java.security.Permissions;
@@ -21,22 +19,18 @@ public class BotSecurityPolicy extends Policy{
 
     @Override
     public PermissionCollection getPermissions(ProtectionDomain domain) {
-
-        System.out.println("Policy getPermissions codesource location: " + domain.getCodeSource().getLocation().getFile());
-     
-         
+    
             if (isPlugin(domain)) {
-                System.out.println("returning plugin permissions with file");
                 return pluginPermissions();
             }
             else {
-                System.out.println("returning application permissions with file");
+                
                 return applicationPermissions();
             }        
     }
  
     private boolean isPlugin(ProtectionDomain domain) {
-        System.out.println("Checking is domain plugin: " + domain.getClassLoader().getName() + "result: " + (domain.getClassLoader() instanceof CommandClassLoader) );
+      
         return domain.getClassLoader() instanceof CommandClassLoader;
     }
  
