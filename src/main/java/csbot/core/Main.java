@@ -11,7 +11,7 @@ public class Main{
     public static void main(String[] args) throws Exception{
 
         //set the security manager to block dangerous operations by external jars
-        Policy.setPolicy(new BotSecurityPolicy());
+        Policy.setPolicy(new BotSecurityPolicy(CSBot.getPluginDataDirectory().getCanonicalPath()));
         System.setSecurityManager(new SecurityManager());  
         
 

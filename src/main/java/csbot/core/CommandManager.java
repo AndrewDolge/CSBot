@@ -11,24 +11,29 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 public class CommandManager{
 
-    private HashMap<String, CooldownCommand> commandMap;
+    private HashMap<String, CommandWrapper> commandMap;
     private ExecutorService    commandExecutor;
 
     private static final CustomLogger logger = new CustomLogger("csbot.CommandManager");
 
 
     public CommandManager(){
-        this.commandMap = new HashMap<String, CooldownCommand>();
+        this.commandMap = new HashMap<String, CommandWrapper>();
     }
 
-    private class CooldownCommand{
+    private class CommandWrapper{
 
         private Command command;
+        private String  dataDir;
         private int     cooldown;
         private AtomicBoolean ready;
 
         public Command getCommand(){
             return this.command;
+        }
+
+        public String getDataDir(){
+            return this.dataDir;
         }
 
         public int getCooldown(){
@@ -43,7 +48,8 @@ public class CommandManager{
             this.ready.set(ready);
         }
 
-        public CooldownCommand(Command command, int cooldown){
+        public CommandWrapper(Command command, String dataDir, int cooldown){
+            this.dataDir = dataDir;
             this.command = command;
             this.cooldown = cooldown;
             this.ready    = new AtomicBoolean(true);
@@ -60,7 +66,7 @@ public class CommandManager{
      */
     public synchronized void execute(MessageReceivedEvent event, String trigger){
 
-       CooldownCommand toExecute = commandMap.get(trigger);
+       CommandWrapper toExecute = commandMap.get(trigger);
 
        if(toExecute != null ){
             if(toExecute.isReady()){
@@ -76,7 +82,9 @@ public class CommandManager{
 
                                     logger.debug("Executing Command (" + toExecute.getCommand().getTrigger() +") for user: " + event.getAuthor().getName());
                                     
-                                    toExecute.getCommand().execute(event, event.getMessage().getContentRaw());
+                                    DiscordMessage message = new DiscordMessage(toExecute.getDataDir(), event );
+
+                                    toExecute.getCommand().execute(message);
 
                                     Thread.sleep(toExecute.getCooldown() * 1000);
                                 }
@@ -91,7 +99,7 @@ public class CommandManager{
                 );//Execute
             }//if isReady()
        }else{
-           logger.error("CommandManager.execute: CooldownCommand lookup on " + trigger +" resulted in null.");
+           logger.error("CommandManager.execute: CommandWrapper lookup on " + trigger +" resulted in null.");
        }
 
     }//execute
@@ -133,7 +141,7 @@ public class CommandManager{
      * @return True, if the Command was unique and added, false otherwise.
      * @throws NullPointerException if command or any of its String methods return null.
      */
-    public boolean addCommand(Command command, int cooldown){
+    public boolean addCommand(Command command,String dataDir, int cooldown){
         boolean result = false;
 
         if(command == null){
@@ -148,7 +156,7 @@ public class CommandManager{
 
         if(!this.contains(command.getTrigger())){
 
-            this.commandMap.put(command.getTrigger(), new CooldownCommand(command, cooldown));
+            this.commandMap.put(command.getTrigger(), new CommandWrapper(command, dataDir, cooldown));
             result = true;
             
         }
@@ -183,7 +191,7 @@ public class CommandManager{
     public String getDescriptions(){
         StringBuilder result = new StringBuilder();
         
-        for(CooldownCommand current: commandMap.values()){
+        for(CommandWrapper current: commandMap.values()){
              result.append(current.getCommand().getTrigger() + ": " + current.getCommand().getDescription() + "\n");
         }//for
 

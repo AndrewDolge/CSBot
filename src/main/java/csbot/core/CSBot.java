@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -39,7 +42,7 @@ public class CSBot extends ListenerAdapter{
 
         loadCommandsFromJars();
         HelpCommand help = new HelpCommand();
-        this.addCommand(help);
+        this.addCommand(help,"");
         help.setDescriptionList(this.commandManager.getDescriptions());
         help.setMap(this.commandManager.getHelpText());
 
@@ -75,9 +78,23 @@ public class CSBot extends ListenerAdapter{
        
         FilenameFilter jarFilter =  (dir, name) ->  name.endsWith(".jar");
      
-        for(File jarFile : getPluginDirectory().listFiles(jarFilter)){
+        for(File jFile : getPluginDirectory().listFiles(jarFilter)){
 
-            try( CommandClassLoader commandLoader = new CommandClassLoader(jarFile.toURI().toURL());) {
+            try( CommandClassLoader commandLoader = new CommandClassLoader(jFile.toURI().toURL());
+                 JarFile jarFile = new JarFile(jFile);) {
+
+               
+                //Gets the File of this plugins assigned data directory
+                File dataDir = new File(CSBot.getPluginDataDirectory().getCanonicalPath() +  File.separatorChar 
+                +  jFile.toPath().getFileName().toString().substring(0, jFile.toPath().getFileName().toString().lastIndexOf(".")));
+
+                  
+
+                logger.debug("File data path: " + dataDir.toString());
+                //create the directory if it doesn't exist
+                if(!dataDir.exists()){
+                    dataDir.mkdir();
+                }
 
                 //get the InputStream for the Configuration file
                 InputStream inputStream = commandLoader.getResourceAsStream("Command.properties");
@@ -89,20 +106,35 @@ public class CSBot extends ListenerAdapter{
                 logger.debug("Loading Plugin: "  +  propertyLoader.getName() +" Version: " + propertyLoader.getVersion() + "  by " + propertyLoader.getAuthor() ); 
                 String[] commands = propertyLoader.getCommands();
 
+              
+                //for every entry in the jar file
+                Enumeration<JarEntry> classes = jarFile.entries();
+                while(classes.hasMoreElements()){
+                    JarEntry current = classes.nextElement();
+                    
+                    //if it is a class file, attempt to load it
+                    if(current.getName().endsWith(".class")){
+                        logger.debug("attempting to load: " + current.getName().substring(0,current.getName().length() - 6).replace("/","."));
+
+                        commandLoader.loadClass(current.getName().substring(0,current.getName().length() - 6).replace("/","."));
+                    }
+                }
+               
+                //for every command listed in the jar property file
                 for(String command : commands){
   
                     try{
 
                         Command toAdd = (Command) commandLoader.loadClass(command).getConstructor().newInstance();
-                        addCommand(toAdd);
+                        addCommand(toAdd, dataDir.toString() + File.separatorChar);
 
                     }catch(Exception e){
-                        logger.error("Could not load Command: " + command + "From file: " + jarFile.getName(), e);
+                        logger.error("Could not load Command: " + command + "From file: " + jFile.getName(), e);
                     }  
                 }//for each command
                 
             } catch (Exception e) {
-               logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jarFile.toString(),e);
+               logger.error("CSBot.loadCommandsFromJars: exception while loading jar file:\n" + jFile.toString(),e);
             }
         }//for jarFile
     }//loadCommandsFromJar
@@ -158,8 +190,8 @@ public class CSBot extends ListenerAdapter{
      * @return true, if the command was added, false otherwise
      * 
      */
-    public boolean addCommand(Command toAdd){
-        boolean added = this.commandManager.addCommand(toAdd, DEFAULT_COOLDOWN);
+    public boolean addCommand(Command toAdd, String dataDir){
+        boolean added = this.commandManager.addCommand(toAdd, dataDir,DEFAULT_COOLDOWN);
 
         if(added){
 
@@ -218,6 +250,19 @@ public class CSBot extends ListenerAdapter{
 
         return null;
     }
+
+    public static File getPluginDataDirectory(){
+        File result = null;
+        try{
+           
+            result = new File(CSBot.getApplicationDirectory().getPath() + File.separatorChar + "data" + File.separatorChar);
+
+        }catch(Exception e){
+            throw new RuntimeException("error accessing plugin directory",e);
+        }
+
+        return result;
+    }//File
 
 }//class
 

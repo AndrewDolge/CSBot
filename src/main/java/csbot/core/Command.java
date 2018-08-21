@@ -1,6 +1,6 @@
 package csbot.core;
 
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+
 
 /**
  * Represents a Command that a user can invoke through a text channel.
@@ -9,6 +9,13 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public interface Command{
 
+    /**
+     * Initializes this command. Called when the command is added to the bot.
+     * 
+     * @param dataFile A file containing the directory that the Command has access to.
+     * 
+     */
+    public void initialize(String filePath);
 
     /**
      * returns a short description of this Command.
@@ -55,7 +62,7 @@ public interface Command{
      * @param event the discord MessageReceivedEvent to process.
      * @param message the message string the user sent to invoke the bot.
      */
-    public void execute(MessageReceivedEvent event, String message);
+    public void execute(DiscordMessage message);
 
 
 

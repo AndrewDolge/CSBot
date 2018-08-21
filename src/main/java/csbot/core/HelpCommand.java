@@ -3,8 +3,6 @@ package csbot.core;
 
 import java.util.Map;
 
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-
 
 public class HelpCommand implements Command {
     
@@ -52,20 +50,20 @@ public class HelpCommand implements Command {
      * @param event the incoming event that contains the message
      * 
      */
-	public void execute(MessageReceivedEvent event, String message) {
+	public void execute(DiscordMessage message) {
         String toUserString = null;
 
-        if(message.split(" ").length == 2 && map.get(message.split(" ")[1]) != null){
+        if(message.getText().split(" ").length == 2 && map.get(message.getText().split(" ")[1]) != null){
             if(map == null){throw new NullPointerException("HelpCommand.execute: map is null.");}
-            toUserString = map.get(message.split(" ")[1]) ;
+            toUserString = map.get(message.getText().split(" ")[1]) ;
 
-        }else if(message.split(" ").length == 1){
+        }else if(message.getText().split(" ").length == 1){
             if(descriptionList == null){throw new NullPointerException("HelpCommand.execute: descriptionList is null");}
             toUserString = this.descriptionList;
         }
 
         if(toUserString != null){
-           DiscordMessageUtil.sendMessageWithMention(event, DiscordMessageUtil.formatText(toUserString));
+          message.sendMessageWithMention(DiscordMessage.formatText(toUserString));
         }
 	}//execute
 	
@@ -83,5 +81,10 @@ public class HelpCommand implements Command {
 	@Override
 	public String getTrigger() {
 		return "help";
+	}
+
+	@Override
+	public void initialize(String file) {
+		
 	}	
 }

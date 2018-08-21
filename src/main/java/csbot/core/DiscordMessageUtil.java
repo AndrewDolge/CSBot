@@ -3,8 +3,7 @@ package csbot.core;
 import java.io.File;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Role;
@@ -17,7 +16,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
  */
 public class DiscordMessageUtil{
 
-    private static final Logger logger = LoggerFactory.getLogger("csbot.core.DiscordMessage");
 
     /**
      * attempt to send a private message to the author of this event.
@@ -95,27 +93,27 @@ public class DiscordMessageUtil{
                       
                     event.getGuild().getController().addRolesToMember(event.getMember(), roles.get(0));
                 }else{
-                    logger.warn("MessageFacade.assignRoleToAuthor: cannot add dangerous permission. ");
+                   throw new RuntimeException("MessageFacade.assignRoleToAuthor: cannot add dangerous permission. ");
                 }
             }else{
-                logger.error("MessageFacade.assignRoleToAuthor: Could not find unique role: " + role);
+                throw new RuntimeException("MessageFacade.assignRoleToAuthor: Could not find unique role: " + role);
             }
         }else{
-            logger.error("MessageFacade.assignRoleToAuthor: this bot doesn't have manage roles permissions.");
+            throw new RuntimeException("MessageFacade.assignRoleToAuthor: this bot doesn't have manage roles permissions.");
         }
     }//AssignRoleToAuthor
 
     public static File getPluginDataDirectory(){
+        File result = null;
         try{
-            File parent = CSBot.getApplicationDirectory();
-            File pluginDir = new File(parent.getAbsolutePath() + File.separatorChar + "data");
-            
-            return pluginDir;
+           
+            result = new File(File.separatorChar + "data").getAbsoluteFile();
+
         }catch(Exception e){
-            logger.error("error accessing plugin directory",e);
+            throw new RuntimeException("error accessing plugin directory",e);
         }
 
-        return null;
+        return result;
     }//File
 
 }//class

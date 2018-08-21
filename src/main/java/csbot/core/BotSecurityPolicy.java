@@ -1,5 +1,8 @@
 package csbot.core;
 
+import java.io.File;
+import java.io.FilePermission;
+
 import java.security.AllPermission;
 import java.security.PermissionCollection;
 import java.security.Permissions;
@@ -15,13 +18,26 @@ import java.security.ProtectionDomain;
  * 
  */
 public class BotSecurityPolicy extends Policy{
+    private String dataDir;
 
+    public BotSecurityPolicy(String dataDir){
+        super();
+        if(dataDir== null){throw new IllegalArgumentException("path is null");}
+        this.dataDir = dataDir;
+
+    }
 
     @Override
     public PermissionCollection getPermissions(ProtectionDomain domain) {
     
-            if (isPlugin(domain)) {
-                return pluginPermissions();
+        System.out.println("ProtectionDomain: " + domain.getCodeSource().getLocation().getPath() + " is plugin: " + isPlugin(domain));
+            
+        if (isPlugin(domain)) {
+            String pluginPath = domain.getCodeSource().getLocation().getPath();
+
+            String dataPluginPath = dataDir + File.separatorChar + pluginPath.substring(pluginPath.lastIndexOf("/") + 1,pluginPath.lastIndexOf("."));
+
+            return pluginPermissions(dataPluginPath);
             }
             else {
                 
@@ -34,16 +50,15 @@ public class BotSecurityPolicy extends Policy{
         return domain.getClassLoader() instanceof CommandClassLoader;
     }
  
-    private PermissionCollection pluginPermissions(String path) {
 
-    
-        Permissions permissions = new Permissions(); // No permissions
-        //permissions.add(new FilePermission("C:\\Users\\Curious Sight\\Desktop\\java_testing\\pluginArchitecture\\apptest\\data\\plugin\\data.txt", "read,write,delete"));
-        return permissions;
-    }
-    private PermissionCollection pluginPermissions() {
+    private PermissionCollection pluginPermissions(String pluginDataDir) {
 
         Permissions permissions = new Permissions(); // No permissions
+       
+            System.out.println("Giving File permission to: " + pluginDataDir + File.separatorChar+ "*");
+            permissions.add(new FilePermission(pluginDataDir + File.separatorChar + "*", "read,write,delete"));
+
+      
        return permissions;
     }
  
