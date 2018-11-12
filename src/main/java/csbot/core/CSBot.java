@@ -29,7 +29,7 @@ public class CSBot extends ListenerAdapter{
     private BotPropertyLoader loader;
   
 
-    private static final CustomLogger logger = new CustomLogger("csbot.core.CSBot");
+    private static final CSBotLogger logger = new CSBotLogger("csbot.core.CSBot");
     private static final int DEFAULT_COOLDOWN = 1;
 
     
@@ -124,8 +124,11 @@ public class CSBot extends ListenerAdapter{
                 for(String command : commands){
   
                     try{
+                        
+                        
 
                         Command toAdd = (Command) commandLoader.loadClass(command).getConstructor().newInstance();
+                        toAdd.initialize( dataDir.toString() + File.separatorChar);
                         addCommand(toAdd, dataDir.toString() + File.separatorChar);
 
                     }catch(Exception e){
@@ -191,8 +194,11 @@ public class CSBot extends ListenerAdapter{
      * 
      */
     public boolean addCommand(Command toAdd, String dataDir){
-        boolean added = this.commandManager.addCommand(toAdd, dataDir,DEFAULT_COOLDOWN);
-
+        //add the command
+        boolean added = this.commandManager.addCommand(toAdd,
+                                                       dataDir,
+                                                       loader.getCooldown(toAdd.getTrigger(), DEFAULT_COOLDOWN));
+        //report if the command was added
         if(added){
 
             logger.debug("Command: (" + toAdd.getTrigger() + ") added! ");
@@ -229,6 +235,10 @@ public class CSBot extends ListenerAdapter{
         }//if running and prefix
     }//onMessageReceived
 
+    /**
+     * returns a file representation of the directory where the CSBot.jar is executing
+     * 
+     */
     public static File getApplicationDirectory(){
         try {
 			return new File(CSBot.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
@@ -238,6 +248,10 @@ public class CSBot extends ListenerAdapter{
         return null;
     }
 
+    /**
+     * returns a file representation of the directory where the plugins jars are stored.
+     * 
+     */
     public static File getPluginDirectory(){
         try{
             File parent = getApplicationDirectory();
@@ -251,6 +265,9 @@ public class CSBot extends ListenerAdapter{
         return null;
     }
 
+    /**
+     * returns a file representation of the directory where the data subdirectories are stored.
+     */
     public static File getPluginDataDirectory(){
         File result = null;
         try{

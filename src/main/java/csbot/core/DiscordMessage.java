@@ -1,5 +1,6 @@
 package csbot.core;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -7,6 +8,7 @@ import java.util.List;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+
 
 /**
  * Static Utility class that handles discord messages properly.
@@ -27,7 +29,7 @@ public class DiscordMessage{
 
         this.filePath = filePath;
         this.event    = event;
-    }
+    }//constructor
 
     /**
      * attempt to send a private message to the author of this event.
@@ -36,7 +38,7 @@ public class DiscordMessage{
      * @param message the message to return to the user.
      * 
      */
-    public  void sendPrivateMessageToAuthor( String message){
+    public  void sendPrivateMessageToAuthor(String message){
         try{
             this.event.getAuthor().openPrivateChannel().complete().sendMessage(message).queue();
             }catch(Exception e){
@@ -116,6 +118,42 @@ public class DiscordMessage{
     }//getText
 
     /**
+     * Checks whether the author has admin permissions in this guild.
+     * @return true, if the author has administrator privledges in this guild., false otherwise.
+     * 
+     */
+    public boolean isAuthorAdmin(){
+
+        boolean result = false;
+
+        if(event.getMember() != null){
+            
+            result = event.getMember().getPermissions().contains(Permission.ADMINISTRATOR);
+        }
+
+        return result;
+
+    }//isAuthorAdmin
+
+    /**
+     * Returns a list of the roles of the Author.
+     * @return a list of strings with the roles of the user, or an empty list if the user has none or is not in a guild.
+     * 
+     */
+    public List<String> getAuthorRoles(){
+        List<String> result = new ArrayList<String>();
+
+        if(event.getMember() != null){
+            
+            for(Role role: event.getMember().getRoles()){
+                result.add(role.getName());
+            }
+        }
+
+        return result;
+    }//getAuthorRoles
+
+    /**
      * Determines if the author is the given role on the server.
      * @param role the role the user might have
      * @return true, if the user has the given role, false otherwise.
@@ -146,7 +184,7 @@ public class DiscordMessage{
      * @param role    the unique role to be assigned to the user.
      * 
      */
-    public void assignRoleToAuthor( String role){
+    public void assignRoleToAuthor(String role) throws Exception{
 
         if(event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES)){
             List<Role> roles =  event.getGuild().getRolesByName(role, true);
@@ -158,15 +196,15 @@ public class DiscordMessage{
                    !roles.get(0).hasPermission(Permission.ADMINISTRATOR) 
                    ){
                       
-                    event.getGuild().getController().addSingleRoleToMember(event.getMember(), roles.get(0));
+                    event.getGuild().getController().addSingleRoleToMember(event.getMember(), roles.get(0)).queue();
                 }else{
-                   throw new RuntimeException("DiscordMessage.assignRoleToAuthor: cannot add dangerous permission. ");
+                   throw new Exception("DiscordMessage.assignRoleToAuthor: cannot add role that manages permissions, roles, or admin status: " + role);
                 }
             }else{
-                throw new RuntimeException("DiscordMessage.assignRoleToAuthor: Could not find unique role: " + role);
+                throw new Exception("DiscordMessage.assignRoleToAuthor: Could not find unique role: " + role);
             }
         }else{
-            throw new RuntimeException("MessageFacade.assignRoleToAuthor: this bot doesn't have manage roles permissions.");
+            throw new Exception("DiscordMessage.assignRoleToAuthor: this bot doesn't have manage roles permissions.");
         }
     }//AssignRoleToAuthor
 
@@ -175,23 +213,29 @@ public class DiscordMessage{
      * @param role the role to take away from the author.
      * 
      */
-    public void removeRoleFromAuthor(String role){
+    public void removeRoleFromAuthor(String role) throws Exception{
       
 
         if(event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES)){
             List<Role> roles =  event.getGuild().getRolesByName(role, true);
 
             if(roles.size() == 1){
-                event.getGuild().getController().removeSingleRoleFromMember(event.getMember(), roles.get(0));
+                event.getGuild().getController().removeSingleRoleFromMember(event.getMember(), roles.get(0)).queue();
+            } else{
+                throw new Exception("DiscordMessage.assignRoleToAuthor: Could not find unique role: " + role);
             }
         }else{
-            throw new RuntimeException("DiscordMessage.assignRoleToAuthor: Could not find unique role: " + role);
+            throw new Exception("DiscordMessage.assignRoleToAuthor: This bot doesn't have manage role permissions.");
         }
 
     }///removeRoleFromAuthor
 
+    /** 
+     * @return  a string representation of a path to the data directory assigned to this plugin.
+     * 
+     */
     public  String getPluginDataDirectory(){
        return this.filePath;
-    }//File
+    }//getPluginDataDirectory
 
 }//class

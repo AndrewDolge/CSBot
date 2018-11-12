@@ -30,7 +30,7 @@ public class BotSecurityPolicy extends Policy{
     @Override
     public PermissionCollection getPermissions(ProtectionDomain domain) {
     
-        System.out.println("ProtectionDomain: " + domain.getCodeSource().getLocation().getPath() + " is plugin: " + isPlugin(domain));
+        //System.out.println("ProtectionDomain: " + domain.getCodeSource().getLocation().getPath() + " is plugin: " + isPlugin(domain));
             
         if (isPlugin(domain)) {
             String pluginPath = domain.getCodeSource().getLocation().getPath();
@@ -55,7 +55,7 @@ public class BotSecurityPolicy extends Policy{
 
         Permissions permissions = new Permissions(); // No permissions
        
-            System.out.println("Giving File permission to: " + pluginDataDir + File.separatorChar+ "*");
+            //System.out.println("Giving File permission to: " + pluginDataDir + File.separatorChar+ "*");
             permissions.add(new FilePermission(pluginDataDir + File.separatorChar + "*", "read,write,delete"));
 
       

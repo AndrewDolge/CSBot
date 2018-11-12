@@ -6,7 +6,7 @@ import java.security.Policy;
 public class Main{
 
     private static CSBot bot = null;
-    private static CustomLogger logger = new CustomLogger("csbot.core.Main");
+    private static CSBotLogger logger = new CSBotLogger("csbot.core.Main");
 
     public static void main(String[] args) throws Exception{
 

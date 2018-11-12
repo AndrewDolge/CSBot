@@ -39,15 +39,34 @@ public class BotPropertyLoader{
 
     }//getToken
     
+    /**
+     * Returns the cooldown in seconds for the given command from the properties file.
+     * 
+     */
     public int getCooldown(String command, int defaultCooldown){
-        int result = defaultCooldown;
+        int result = getDefaultCooldown(defaultCooldown);
         try{
             String value = properties.getProperty(command + "Cooldown");
-            result = Integer.valueOf(value);
+            result = Integer.max(1,Integer.valueOf(value));
         }catch(Exception e){}
       
         return result;
 
     }//getCooldown
+
+    /**
+     * Returns the default cooldown in seconds for all command from the properties file.
+     * 
+     */
+    public int getDefaultCooldown(int defaultCooldown){
+        int result = defaultCooldown;
+        try{
+            String value = properties.getProperty("DefaultCooldown");
+            result = Integer.max(1,Integer.valueOf(value));
+        }catch(Exception e){}
+      
+        return result;
+
+    }
 
 }

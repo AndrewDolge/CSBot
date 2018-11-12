@@ -9,12 +9,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
+/**
+ * Manages the execution of commands.
+ * 
+ * 
+ * 
+ */
 public class CommandManager{
 
     private HashMap<String, CommandWrapper> commandMap;
     private ExecutorService    commandExecutor;
 
-    private static final CustomLogger logger = new CustomLogger("csbot.CommandManager");
+    private static final CSBotLogger logger = new CSBotLogger("csbot.CommandManager");
 
 
     public CommandManager(){
