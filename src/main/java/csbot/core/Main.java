@@ -1,19 +1,19 @@
 package csbot.core;
 
-import csbot.core.BotProperties;
-import csbot.core.CSBot;
-
 import java.io.File;
+import java.security.Policy;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class Main{
 
-public class Main {
-
-    private static Logger logger = LoggerFactory.getLogger("csbot.Main");
     private static CSBot bot = null;
+    private static CSBotLogger logger = new CSBotLogger("csbot.core.Main");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception{
+
+        //set the security manager to block dangerous operations by external jars
+        Policy.setPolicy(new BotSecurityPolicy(CSBot.getPluginDataDirectory().getCanonicalPath()));
+        System.setSecurityManager(new SecurityManager());  
+        
 
         // add a shutdown hook to shut off the bot when the JVM is turned off.
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -30,48 +30,32 @@ public class Main {
                    
                 } catch (Exception e) {
 
-                    logger.error("Exception occurred when shutting down bot.", e);
+                   logger.error("Exception occurred when shutting down bot.", e);
                 }
 
             }
-        }, "Bot-Shutdown-thread"));
+        }, "Bot-Shutdown-thread")); 
 
-        BotProperties properties = null;
-        File propertyFile        = null;
-
-        try {
+        if(CSBot.getPluginDirectory().exists() ){
+            File propertyFile = new File (CSBot.getApplicationDirectory().getPath() + "/bot.properties");
+            if(propertyFile.exists()){
  
-            //parse the command line arguments.
-            if (args.length > 0) {
-                
-                propertyFile = new File(args[0]);
-            //attempt to access the property file from the directory of the jar
+                BotPropertyLoader loader = new BotPropertyLoader(propertyFile);
+                CSBot bot = new CSBot(loader);
+
+                bot.start();
+
             }else{
-                logger.debug("attempting to load properties file from: " + new File("bot.properties").getAbsolutePath());
-                propertyFile =  new File("bot.properties");
+                //could not find bot.properties file.
+                logger.error("Could not find bot.properties file at location:\n\t" + propertyFile.getPath() );
             }
+        }else{
+            //could not find plugin directories
+            logger.warn("Could not find plugin directory at location: \n\t" + CSBot.getPluginDirectory());
+        }
 
-                if (propertyFile != null && propertyFile.exists()) {
-                    
-                    logger.debug("File path specified: " + propertyFile.getAbsolutePath());
-                    properties = new BotProperties(propertyFile);
-                    bot = new CSBot(properties);
-
-                    bot.start();
-
-                } else {
-
-                    logger.error("no property file specified.");
-                }
+    }//main
 
 
-        } catch (Exception e) {
-            logger.error("Exception occurred.", e);
-            if (bot != null) {
-                bot.shutdown();
-            }
-        } // catch
 
-    }// main
-
-}// class
+}

@@ -6,31 +6,40 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
+/**
+ * Manages the execution of commands.
+ * 
+ * 
+ * 
+ */
 public class CommandManager{
 
-    private HashMap<String, CooldownCommand> commandMap;
+    private HashMap<String, CommandWrapper> commandMap;
     private ExecutorService    commandExecutor;
 
-    private static final Logger logger = LoggerFactory.getLogger("csbot.CommandManager");
+    private static final CSBotLogger logger = new CSBotLogger("csbot.CommandManager");
 
 
     public CommandManager(){
-        this.commandMap = new HashMap<String, CooldownCommand>();
+        this.commandMap = new HashMap<String, CommandWrapper>();
     }
 
-    private class CooldownCommand{
+    private class CommandWrapper{
 
         private Command command;
+        private String  dataDir;
         private int     cooldown;
         private AtomicBoolean ready;
 
         public Command getCommand(){
             return this.command;
+        }
+
+        public String getDataDir(){
+            return this.dataDir;
         }
 
         public int getCooldown(){
@@ -45,7 +54,8 @@ public class CommandManager{
             this.ready.set(ready);
         }
 
-        public CooldownCommand(Command command, int cooldown){
+        public CommandWrapper(Command command, String dataDir, int cooldown){
+            this.dataDir = dataDir;
             this.command = command;
             this.cooldown = cooldown;
             this.ready    = new AtomicBoolean(true);
@@ -62,7 +72,7 @@ public class CommandManager{
      */
     public synchronized void execute(MessageReceivedEvent event, String trigger){
 
-       CooldownCommand toExecute = commandMap.get(trigger);
+       CommandWrapper toExecute = commandMap.get(trigger);
 
        if(toExecute != null ){
             if(toExecute.isReady()){
@@ -74,10 +84,16 @@ public class CommandManager{
 						@Override
 						public void run() {
                             try {
-                                logger.debug("Executing Command (" + toExecute.getCommand().getTrigger() +") for user: " + event.getAuthor().getName());
-                                toExecute.getCommand().execute(event, event.getMessage().getContentRaw());
+                                if(!(event.getJDA().getStatus() == JDA.Status.SHUTDOWN || event.getJDA().getStatus() == JDA.Status.SHUTTING_DOWN)){
 
-                                Thread.sleep(toExecute.getCooldown() * 1000);
+                                    logger.debug("Executing Command (" + toExecute.getCommand().getTrigger() +") for user: " + event.getAuthor().getName());
+                                    
+                                    DiscordMessage message = new DiscordMessage(toExecute.getDataDir(), event );
+
+                                    toExecute.getCommand().execute(message);
+
+                                    Thread.sleep(toExecute.getCooldown() * 1000);
+                                }
                               
                             } catch (Exception e) {
                                 logger.error("\tException thrown Executing Command (" + toExecute.getCommand().getTrigger() +") for user: " + event.getAuthor().getName(),e);
@@ -89,7 +105,7 @@ public class CommandManager{
                 );//Execute
             }//if isReady()
        }else{
-           logger.error("CommandManager.execute: CooldownCommand lookup on " + trigger +" resulted in null.");
+           logger.error("CommandManager.execute: CommandWrapper lookup on " + trigger +" resulted in null.");
        }
 
     }//execute
@@ -105,7 +121,6 @@ public class CommandManager{
     public void shutdown(){
         this.commandExecutor.shutdownNow();
     }//shutdown
-
 
     /**
      * Determines whether the CommandManager currently contains a Command that maps to the given trigger.
@@ -132,7 +147,7 @@ public class CommandManager{
      * @return True, if the Command was unique and added, false otherwise.
      * @throws NullPointerException if command or any of its String methods return null.
      */
-    public boolean addCommand(Command command, int cooldown){
+    public boolean addCommand(Command command,String dataDir, int cooldown){
         boolean result = false;
 
         if(command == null){
@@ -147,8 +162,9 @@ public class CommandManager{
 
         if(!this.contains(command.getTrigger())){
 
-            this.commandMap.put(command.getTrigger(), new CooldownCommand(command, cooldown));
+            this.commandMap.put(command.getTrigger(), new CommandWrapper(command, dataDir, cooldown));
             result = true;
+            
         }
         return result;
     }//addCommand
@@ -181,7 +197,7 @@ public class CommandManager{
     public String getDescriptions(){
         StringBuilder result = new StringBuilder();
         
-        for(CooldownCommand current: commandMap.values()){
+        for(CommandWrapper current: commandMap.values()){
              result.append(current.getCommand().getTrigger() + ": " + current.getCommand().getDescription() + "\n");
         }//for
 
