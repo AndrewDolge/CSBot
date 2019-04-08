@@ -8,7 +8,7 @@ import java.util.Properties;
 
 
 /**
- * Loads in values from a given property file
+ * Loads in values from a given property file from a plugin
  */
 public class CommandPropertyLoader{
 

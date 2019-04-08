@@ -9,6 +9,7 @@ import java.util.Properties;
 
 /**
  * Loads in values from a given property file
+ * Sets up properties for the bot.
  */
 public class BotPropertyLoader{
 
@@ -35,7 +36,10 @@ public class BotPropertyLoader{
      * 
      */
     public String getToken(){
-        return properties.getProperty("Token");
+
+        String result = properties.getProperty("token");
+
+        return result;
 
     }//getToken
     

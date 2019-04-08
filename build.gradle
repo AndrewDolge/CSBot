@@ -11,7 +11,7 @@ plugins {
 
     // Apply the java plugin to add support for Java
     id 'java'
-
+    id 'com.github.johnrengelman.shadow' version '4.0.4'
     // Apply the application plugin to add support for building an application
     id 'application'
 }
@@ -20,7 +20,7 @@ plugins {
 
 dependencies {
  
-    compile 'net.dv8tion:JDA:3.6.0_376'
+    compile 'net.dv8tion:JDA:3.8.3_462'
 
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.+'
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.+'
@@ -48,9 +48,6 @@ jar {
     attributes "Main-Class": "$mainClassName"
   }  
 
-  from {
-    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-  }
 }
 
 

@@ -36,22 +36,37 @@ public class Main{
             }
         }, "Bot-Shutdown-thread")); 
 
-        if(CSBot.getPluginDirectory().exists() ){
+        //Check to see if the prerequisite files are there
+
+        if(CSBot.getPluginDirectory().exists() && CSBot.getPluginDataDirectory().exists()){
+
             File propertyFile = new File (CSBot.getApplicationDirectory().getPath() + "/bot.properties");
+
             if(propertyFile.exists()){
  
                 BotPropertyLoader loader = new BotPropertyLoader(propertyFile);
+
                 CSBot bot = new CSBot(loader);
 
-                bot.start();
+                if(!bot.start()){
+                    logger.debug("Bot failed to start. Shutting down.");
+                    bot.shutdown();
+                    System.exit(-1);
+                }
 
             }else{
                 //could not find bot.properties file.
                 logger.error("Could not find bot.properties file at location:\n\t" + propertyFile.getPath() );
+                CSBot.setupDirectory();
+
             }
         }else{
             //could not find plugin directories
-            logger.warn("Could not find plugin directory at location: \n\t" + CSBot.getPluginDirectory());
+            logger.warn(
+                        "Could not find plugin directory at location: \n\t" + CSBot.getPluginDirectory() +
+                        "\nand/or could not find plugin data directory at location: \n\t" + CSBot.getPluginDirectory()
+            );
+            CSBot.setupDirectory();
         }
 
     }//main
