@@ -4,7 +4,7 @@
 # CSBot- A Plugin Based Chat Bot in Java for Discord
 
 ## About
-This program implements a chat bot for the Chat Program Discord using the Java Discord API.
+This program implements a chat bot for the Chat Program Discord using the [JDA-- Java Discord API](https://github.com/DV8FromTheWorld/JDA).
 
 
 ## Prerequisites
